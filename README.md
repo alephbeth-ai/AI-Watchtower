@@ -9,7 +9,7 @@ Beyond the articles, the site ships **interactive teaching widgets** — step-by
 ## What the site offers
 
 - **Articles** — security research posts, filterable by category (Fundamentals, Explainer, Analysis, Hardening, Strategy) with full-text search across titles, summaries, and tags.
-- **Interactive** — standalone HTML widgets (LSTM / CNN / Transformer walkthroughs) embedded in articles and browsable from their own tab.
+- **Interactive** — a lab of standalone HTML widgets browsable from their own tab: step-by-step architecture walkthroughs (LSTM / CNN / Transformer) and a 24-screen tokenization deep dive with tokenizers trained live in the browser and five families of tokenizer-level attacks.
 - **Bilingual** — every article exists in an English and a French version, linked by a shared `translationKey`; the language switcher toggles the whole site.
 - **Dark / light mode** — follows the system preference by default, with a manual toggle.
 
@@ -33,7 +33,7 @@ The site is a single-page application built with **React 18 + TypeScript + Vite 
 │   └── fr/posts/                   # French articles (Markdown + frontmatter)
 ├── static/
 │   ├── favicon.svg
-│   └── widgets/                    # Standalone HTML teaching widgets (lstm/cnn/transformer, en+fr)
+│   └── widgets/                    # Standalone HTML teaching widgets (lstm/cnn/transformer en+fr, tokens fr)
 └── .github/workflows/deploy.yml    # Build + deploy to GitHub Pages
 ```
 

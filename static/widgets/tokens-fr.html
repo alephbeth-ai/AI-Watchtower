@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Les tokens : la matière première invisible des LLM</title>
+<style>
+/* ============ THEME ============ */
+:root{
+  --bg:#0b0d13; --bg2:#11141d; --surf:#161a26; --surf2:#1d2231;
+  --line:#2a3145; --line2:#3a4360;
+  --tx:#e8ebf2; --tx2:#a4aec5; --tx3:#6d7794;
+  --acc:#7aa2ff; --acc2:#b78bff; --ok:#4fd1a5; --warn:#ffc861; --bad:#ff7a8a;
+  --t1:#7aa2ff; --t2:#4fd1a5; --t3:#ffc861; --t4:#ff9db1; --t5:#b78bff;
+  --t6:#5fd0e8; --t7:#ffab73; --t8:#9ae06a;
+  --shadow:0 18px 50px -20px rgba(0,0,0,.85);
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+html[data-theme="light"]{
+  --bg:#f6f7fb; --bg2:#eef0f7; --surf:#ffffff; --surf2:#f2f4fa;
+  --line:#dde1ec; --line2:#c6cddf;
+  --tx:#141824; --tx2:#4d566e; --tx3:#7c869e;
+  --acc:#2f5fd0; --acc2:#7c3fd4; --ok:#0d8f68; --warn:#a86b00; --bad:#c0334a;
+  --t1:#2f5fd0; --t2:#0d8f68; --t3:#a86b00; --t4:#c0334a; --t5:#7c3fd4;
+  --t6:#0e7d94; --t7:#b45309; --t8:#4d7c0f;
+  --shadow:0 14px 40px -18px rgba(20,25,45,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--tx);
+  font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+  transition:background .35s ease,color .35s ease;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(900px 600px at 12% -5%, color-mix(in srgb,var(--acc) 14%,transparent), transparent 60%),
+    radial-gradient(800px 500px at 95% 105%, color-mix(in srgb,var(--acc2) 12%,transparent), transparent 60%);
+}
+/* ============ CHROME ============ */
+#topbar{
+  position:fixed;top:0;left:0;right:0;height:52px;z-index:50;
+  display:flex;align-items:center;gap:14px;padding:0 18px;
+  background:color-mix(in srgb,var(--bg) 82%,transparent);
+  backdrop-filter:blur(14px);border-bottom:1px solid var(--line);
+}
+#brand{font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);white-space:nowrap}
+#progwrap{flex:1;height:4px;background:var(--line);border-radius:99px;overflow:hidden}
+#prog{height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:99px;transition:width .35s cubic-bezier(.2,.8,.2,1)}
+#counter{font-variant-numeric:tabular-nums;font-size:13px;color:var(--tx3);white-space:nowrap;font-family:var(--mono)}
+.iconbtn{
+  background:var(--surf);border:1px solid var(--line);color:var(--tx2);
+  width:34px;height:34px;border-radius:9px;cursor:pointer;display:grid;place-items:center;
+  font-size:15px;transition:.18s;flex:none;
+}
+.iconbtn:hover{border-color:var(--acc);color:var(--tx);transform:translateY(-1px)}
+
+#deck{position:fixed;inset:52px 0 66px;z-index:1;overflow:hidden}
+.slide{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;
+  padding:38px 26px 60px;
+  opacity:0;visibility:hidden;transform:translateY(16px);
+  transition:opacity .4s ease,transform .45s cubic-bezier(.2,.8,.2,1),visibility .4s;
+}
+.slide.on{opacity:1;visibility:visible;transform:none}
+.inner{max-width:1080px;margin:0 auto}
+.slide::-webkit-scrollbar{width:9px}
+.slide::-webkit-scrollbar-thumb{background:var(--line2);border-radius:9px}
+
+#navbar{
+  position:fixed;bottom:0;left:0;right:0;height:66px;z-index:50;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  background:color-mix(in srgb,var(--bg) 82%,transparent);
+  backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:0 16px;
+}
+.navbtn{
+  background:var(--surf);border:1px solid var(--line);color:var(--tx);
+  padding:9px 18px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;
+  transition:.18s;font-family:inherit;
+}
+.navbtn:hover:not(:disabled){border-color:var(--acc);transform:translateY(-1px)}
+.navbtn:disabled{opacity:.32;cursor:not-allowed}
+#dots{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;max-width:620px}
+.dot{width:8px;height:8px;border-radius:99px;background:var(--line2);cursor:pointer;transition:.2s;border:none;padding:0}
+.dot:hover{background:var(--tx3);transform:scale(1.35)}
+.dot.on{width:22px;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+.dot.sec{background:color-mix(in srgb,var(--bad) 60%,var(--line2))}
+
+/* ============ TYPO ============ */
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,transparent);
+  border:1px solid color-mix(in srgb,var(--acc) 30%,transparent);
+  padding:5px 12px;border-radius:99px;margin-bottom:16px;
+}
+.eyebrow.red{color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent);border-color:color-mix(in srgb,var(--bad) 32%,transparent)}
+.eyebrow.green{color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent);border-color:color-mix(in srgb,var(--ok) 32%,transparent)}
+h1{font-size:clamp(30px,5.2vw,54px);line-height:1.08;letter-spacing:-.025em;font-weight:800;margin-bottom:18px}
+h2{font-size:clamp(24px,3.6vw,36px);line-height:1.15;letter-spacing:-.02em;font-weight:800;margin-bottom:14px}
+h3{font-size:18px;font-weight:700;margin-bottom:9px;letter-spacing:-.01em}
+h4{font-size:14px;font-weight:700;margin-bottom:7px;color:var(--tx2);text-transform:uppercase;letter-spacing:.09em}
+p{color:var(--tx2);margin-bottom:13px;max-width:70ch}
+.lead{font-size:clamp(17px,2vw,20px);color:var(--tx2);line-height:1.6}
+strong{color:var(--tx);font-weight:650}
+.grad{background:linear-gradient(100deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+a{color:var(--acc)}
+
+/* ============ COMPONENTS ============ */
+.card{background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:var(--shadow)}
+.card.soft{background:var(--surf2);box-shadow:none}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(165px,1fr))}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+
+ul.clean{list-style:none;display:flex;flex-direction:column;gap:9px}
+ul.clean li{position:relative;padding-left:26px;color:var(--tx2);font-size:14.5px;line-height:1.5}
+ul.clean li::before{position:absolute;left:0;top:0;font-weight:800}
+ul.pro li::before{content:"✔";color:var(--ok)}
+ul.con li::before{content:"✕";color:var(--bad)}
+ul.num{counter-reset:s}
+ul.num li{counter-increment:s}
+ul.num li::before{content:counter(s);color:var(--acc);font-family:var(--mono);font-size:12px;top:2px}
+
+.kpi{background:var(--surf2);border:1px solid var(--line);border-radius:14px;padding:16px}
+.kpi .n{font-size:clamp(24px,3.4vw,34px);font-weight:800;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;font-family:var(--mono)}
+.kpi .l{font-size:12px;color:var(--tx3);margin-top:7px;line-height:1.35}
+
+.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:99px;
+  background:var(--surf2);border:1px solid var(--line);color:var(--tx2);font-family:var(--mono)}
+
+.callout{border-left:3px solid var(--acc);background:color-mix(in srgb,var(--acc) 8%,var(--surf));
+  padding:14px 18px;border-radius:0 12px 12px 0}
+.callout.red{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 9%,var(--surf))}
+.callout.green{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 9%,var(--surf))}
+.callout.warn{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 9%,var(--surf))}
+.callout p:last-child{margin-bottom:0}
+
+/* tokens */
+.tokline{display:flex;flex-wrap:wrap;gap:3px;font-family:var(--mono);font-size:14px;line-height:1.9}
+.tok{padding:2px 5px;border-radius:5px;white-space:pre;border:1px solid transparent;transition:.15s;cursor:default}
+.tok:hover{outline:2px solid var(--tx3);outline-offset:1px}
+.tok .sp{opacity:.42}
+.c0{background:color-mix(in srgb,var(--t1) 24%,transparent);color:var(--t1);border-color:color-mix(in srgb,var(--t1) 38%,transparent)}
+.c1{background:color-mix(in srgb,var(--t2) 24%,transparent);color:var(--t2);border-color:color-mix(in srgb,var(--t2) 38%,transparent)}
+.c2{background:color-mix(in srgb,var(--t3) 24%,transparent);color:var(--t3);border-color:color-mix(in srgb,var(--t3) 38%,transparent)}
+.c3{background:color-mix(in srgb,var(--t4) 24%,transparent);color:var(--t4);border-color:color-mix(in srgb,var(--t4) 38%,transparent)}
+.c4{background:color-mix(in srgb,var(--t5) 24%,transparent);color:var(--t5);border-color:color-mix(in srgb,var(--t5) 38%,transparent)}
+.c5{background:color-mix(in srgb,var(--t6) 24%,transparent);color:var(--t6);border-color:color-mix(in srgb,var(--t6) 38%,transparent)}
+.c6{background:color-mix(in srgb,var(--t7) 24%,transparent);color:var(--t7);border-color:color-mix(in srgb,var(--t7) 38%,transparent)}
+.c7{background:color-mix(in srgb,var(--t8) 24%,transparent);color:var(--t8);border-color:color-mix(in srgb,var(--t8) 38%,transparent)}
+
+/* form */
+textarea,input[type=text]{
+  width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:11px;
+  color:var(--tx);padding:12px 14px;font-family:var(--mono);font-size:14px;resize:vertical;
+  outline:none;transition:.18s;
+}
+textarea:focus,input[type=text]:focus{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 18%,transparent)}
+select{
+  background:var(--bg2);border:1px solid var(--line);border-radius:9px;color:var(--tx);
+  padding:8px 12px;font-family:inherit;font-size:13.5px;outline:none;cursor:pointer;
+}
+input[type=range]{-webkit-appearance:none;appearance:none;height:5px;border-radius:99px;background:var(--line2);outline:none;flex:1;min-width:120px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:99px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));cursor:pointer;border:2px solid var(--bg)}
+input[type=range]::-moz-range-thumb{width:17px;height:17px;border-radius:99px;border:2px solid var(--bg);
+  background:var(--acc);cursor:pointer}
+.btn{
+  background:linear-gradient(135deg,var(--acc),var(--acc2));border:none;color:#fff;
+  padding:9px 17px;border-radius:10px;cursor:pointer;font-size:13.5px;font-weight:700;
+  font-family:inherit;transition:.18s;
+}
+.btn:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.btn.ghost{background:var(--surf2);color:var(--tx);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--acc);filter:none}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;filter:none}
+label.fl{font-size:12px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em}
+
+/* table */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surf)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:840px}
+th{background:var(--surf2);color:var(--tx3);font-size:11px;text-transform:uppercase;letter-spacing:.09em;
+  padding:11px 13px;text-align:left;font-weight:800;border-bottom:1px solid var(--line);position:sticky;top:0}
+td{padding:11px 13px;border-bottom:1px solid var(--line);color:var(--tx2);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:color-mix(in srgb,var(--acc) 5%,transparent)}
+td b{color:var(--tx)}
+.mono{font-family:var(--mono)}
+.center{text-align:center}
+
+.hint{font-size:12.5px;color:var(--tx3);font-style:italic}
+.divider{height:1px;background:var(--line);margin:20px 0}
+.pill-row{display:flex;gap:7px;flex-wrap:wrap}
+.pill{font-size:12px;padding:5px 11px;border-radius:99px;border:1px solid var(--line);
+  background:var(--surf2);color:var(--tx2);cursor:pointer;transition:.15s;font-family:inherit}
+.pill:hover{border-color:var(--acc);color:var(--tx)}
+.pill.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-color:transparent}
+
+.mergestep{display:flex;align-items:center;gap:10px;padding:7px 11px;border-radius:9px;background:var(--surf2);
+  border:1px solid var(--line);font-family:var(--mono);font-size:12.5px;animation:pop .3s ease}
+@keyframes pop{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.bar{height:7px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .5s}
+
+.algo-head{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.algo-num{font-family:var(--mono);font-size:13px;font-weight:800;color:var(--bg);
+  background:linear-gradient(135deg,var(--acc),var(--acc2));width:38px;height:38px;border-radius:11px;
+  display:grid;place-items:center;flex:none;color:#fff}
+.steps{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.step{background:var(--surf2);border:1px solid var(--line);border-radius:12px;padding:13px}
+.step .k{font-family:var(--mono);font-size:11px;color:var(--acc);font-weight:800;margin-bottom:5px}
+.step .v{font-size:13.5px;color:var(--tx2);line-height:1.45}
+
+.chip{font-family:var(--mono);font-size:12.5px;padding:3px 8px;border-radius:6px;
+  background:var(--surf2);border:1px solid var(--line);color:var(--tx)}
+code{font-family:var(--mono);font-size:.92em;background:var(--surf2);padding:1.5px 5px;border-radius:5px;
+  border:1px solid var(--line);color:var(--tx)}
+
+.toc{display:grid;gap:11px}
+.toc-item{display:flex;gap:14px;align-items:center;padding:13px 16px;background:var(--surf);
+  border:1px solid var(--line);border-radius:13px;cursor:pointer;transition:.2s;text-align:left;
+  font-family:inherit;color:inherit;width:100%}
+.toc-item:hover{border-color:var(--acc);transform:translateX(5px)}
+.toc-n{font-family:var(--mono);font-size:12px;font-weight:800;color:var(--acc);flex:none;
+  width:30px;height:30px;border-radius:8px;display:grid;place-items:center;
+  background:color-mix(in srgb,var(--acc) 13%,transparent)}
+.toc-t{font-weight:700;font-size:15px;color:var(--tx)}
+.toc-d{font-size:12.5px;color:var(--tx3)}
+
+svg text{font-family:var(--mono);font-size:10px;fill:var(--tx3)}
+.scroll-x{overflow-x:auto}
+@media (max-width:640px){
+  .slide{padding:24px 16px 50px}
+  #dots{display:none}
+  .card{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <span id="brand">Tokens &amp; Tokenisation</span>
+  <div id="progwrap"><div id="prog"></div></div>
+  <span id="counter">1 / 23</span>
+  <button class="iconbtn" id="themebtn" title="Thème clair / sombre">◐</button>
+</div>
+
+<div id="bootscreen" style="position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:var(--bg);gap:14px">
+  <div style="text-align:center">
+    <div style="font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx3);font-weight:800;margin-bottom:14px">Entraînement des tokeniseurs</div>
+    <div style="width:220px;height:4px;border-radius:99px;background:var(--line);overflow:hidden;margin:0 auto">
+      <div style="height:100%;width:40%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2));animation:sl 1.1s ease-in-out infinite"></div>
+    </div>
+    <div style="font-size:12.5px;color:var(--tx3);margin-top:14px">BPE, WordPiece et Unigram sont entraînés en direct sur le corpus embarqué.</div>
+  </div>
+</div>
+<style>@keyframes sl{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}</style>
+<div id="deck"></div>
+
+<div id="navbar">
+  <button class="navbtn" id="prev">← Précédent</button>
+  <div id="dots"></div>
+  <button class="navbtn" id="next">Suivant →</button>
+</div>
+
+<template id="slides">
+
+<!-- =================== 1. TITRE =================== -->
+<section class="slide">
+ <div class="inner stack" style="justify-content:center;min-height:70vh">
+  <span class="eyebrow">Réflexion · Panorama · Sécurité</span>
+  <h1>Les <span class="grad">tokens</span><br>La matière première invisible des LLM</h1>
+  <p class="lead" style="max-width:64ch">Avant même de « penser », un modèle de langage doit <strong>découper le monde</strong>. Ce découpage — la tokenisation — décide de ce qu'il peut lire, de ce qu'il vous facture, de ce qu'il comprend… et de par où on peut l'attaquer.</p>
+  <div class="grid g4" style="margin-top:12px">
+    <div class="kpi"><div class="n">8</div><div class="l">familles d'algorithmes passées au crible</div></div>
+    <div class="kpi"><div class="n">6</div><div class="l">démonstrations interactives, calculées en direct</div></div>
+    <div class="kpi"><div class="n">5</div><div class="l">classes d'attaques exploitant la tokenisation</div></div>
+    <div class="kpi"><div class="n">24</div><div class="l">écrans — utilisez ← et → au clavier</div></div>
+  </div>
+  <p class="hint" style="margin-top:10px">Tous les tokeniseurs de cette présentation sont réellement entraînés dans votre navigateur, sur un corpus embarqué. Rien n'est simulé.</p>
+ </div>
+</section>
+
+<!-- =================== 2. ACCROCHE =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow">Accroche</span>
+  <h2>Une machine qui rédige une dissertation<br>mais échoue à une question de CE1</h2>
+  <div class="grid g2">
+   <div class="card">
+     <h4>La question</h4>
+     <p style="font-size:19px;color:var(--tx)">« Combien de fois la lettre <strong>r</strong> apparaît-elle dans <strong>strawberry</strong> ? »</p>
+     <p>Pendant des années, les meilleurs modèles du monde ont répondu <strong>« deux »</strong>. Avec aplomb. La bonne réponse est trois.</p>
+     <div class="callout warn"><p>Ce n'est pas un défaut d'intelligence. C'est un défaut de <strong>vision</strong>.</p></div>
+   </div>
+   <div class="card">
+     <h4>Ce que le modèle voit réellement</h4>
+     <div class="tokline" style="font-size:17px;margin-bottom:14px">
+       <span class="tok c0">st</span><span class="tok c1">raw</span><span class="tok c2">berry</span>
+     </div>
+     <p>Trois blocs opaques. Aucun n'est une lettre. Demander à ce modèle de compter les « r » revient à demander à quelqu'un qui lit les idéogrammes chinois de compter les traits d'un mot français.</p>
+     <p style="margin-bottom:0">Le modèle ne lit pas des <em>lettres</em>. Il lit des <strong>tokens</strong> — et il n'a jamais vu ce qu'il y a dedans.</p>
+   </div>
+  </div>
+  <div class="callout">
+    <p><strong>La thèse de cette présentation :</strong> la tokenisation est la couche la plus sous-estimée de l'IA générative. Elle est simultanément une décision d'ingénierie, une décision économique, une décision politique (quelles langues coûtent cher ?) et une décision de sécurité. Tout ce qui suit découle d'un seul arbitrage.</p>
+  </div>
+ </div>
+</section>
+
+<!-- =================== 3. PLAN =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow">Feuille de route</span>
+  <h2>Cinq actes</h2>
+  <p class="lead">Du problème fondamental aux attaques concrètes, en passant par huit familles d'algorithmes.</p>
+  <div class="toc" id="toc"></div>
+ </div>
+</section>
+
+<!-- =================== 4. QU'EST-CE QU'UN TOKEN =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow">Acte I · Le problème</span>
+  <h2>Un token, c'est quoi exactement ?</h2>
+  <p class="lead">Un réseau de neurones ne manipule que des <strong>nombres</strong>. Il faut donc transformer « Bonjour le monde » en une liste d'entiers. Le tokeniseur est ce traducteur : il découpe le texte en morceaux, et chaque morceau a un numéro dans un dictionnaire figé — le <strong>vocabulaire</strong>.</p>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between;margin-bottom:12px">
+      <h3 style="margin:0">Démo 1 — Le visualiseur</h3>
+      <span class="tag" id="d1-count">— tokens</span>
+    </div>
+    <textarea id="d1-in" rows="3">Bonjour le monde ! La tokenisation, c'est l'art de découper le langage en 2026.</textarea>
+    <div class="row" style="margin:12px 0">
+      <label class="fl">Algorithme</label>
+      <select id="d1-algo">
+        <option value="bpe">BPE (entraîné en direct)</option>
+        <option value="wp">WordPiece</option>
+        <option value="uni">Unigram / SentencePiece</option>
+        <option value="word">Mots</option>
+        <option value="char">Caractères</option>
+        <option value="byte">Octets UTF-8</option>
+      </select>
+      <span class="hint">Survolez un token pour voir son identifiant.</span>
+    </div>
+    <div class="tokline" id="d1-out"></div>
+    <div class="divider"></div>
+    <h4>Les mêmes tokens, tels que le modèle les reçoit</h4>
+    <div class="mono" id="d1-ids" style="font-size:12.5px;color:var(--tx3);word-break:break-all"></div>
+    <p class="hint" style="margin-top:10px;margin-bottom:0">Un <code>?</code> signale un symbole absent du vocabulaire appris sur ce petit corpus — chiffres, ponctuation rare, alphabets étrangers. C’est exactement le problème du hors-vocabulaire, et la raison d’être du repli sur les octets.</p>
+  </div>
+
+  <div class="grid g3">
+    <div class="card soft"><h4>Vocabulaire</h4><p style="margin:0;font-size:14px">La liste fermée de tous les morceaux connus. Typiquement 30 000 à 260 000 entrées. Ce qui n'y est pas doit être reconstruit par morceaux.</p></div>
+    <div class="card soft"><h4>Fenêtre de contexte</h4><p style="margin:0;font-size:14px">Elle se compte en tokens, pas en mots. Un tokeniseur inefficace vous vole littéralement de la mémoire.</p></div>
+    <div class="card soft"><h4>Facturation</h4><p style="margin:0;font-size:14px">Les API facturent au token. Le même texte, deux tokeniseurs, deux factures différentes.</p></div>
+  </div>
+ </div>
+</section>
+
+<!-- =================== 5. LE DILEMME =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow">Acte I · Le problème</span>
+  <h2>Le dilemme fondamental</h2>
+  <p class="lead">Tous les algorithmes qui suivent ne font qu'une chose : négocier un compromis entre <strong>deux forces opposées</strong>. Il n'existe pas de solution parfaite, seulement des points d'équilibre.</p>
+
+  <div class="grid g2">
+    <div class="card">
+      <h3 style="color:var(--t1)">← Vers les caractères</h3>
+      <ul class="clean pro"><li>Vocabulaire minuscule (~100 symboles)</li><li>Aucun mot inconnu, jamais</li><li>Le modèle « voit » l'orthographe</li></ul>
+      <ul class="clean con" style="margin-top:9px"><li>Séquences très longues → coût de calcul quadratique dans l'attention</li><li>Le modèle doit réapprendre ce qu'est un mot</li></ul>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--t5)">Vers les mots →</h3>
+      <ul class="clean pro"><li>Séquences très courtes</li><li>Chaque token porte du sens immédiatement</li></ul>
+      <ul class="clean con" style="margin-top:9px"><li>Vocabulaire explosif (millions de formes)</li><li>Tout mot nouveau devient <code>&lt;UNK&gt;</code> — information perdue</li><li>Matrice d'embedding gigantesque</li></ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between;margin-bottom:6px">
+      <h3 style="margin:0">Démo 2 — Le curseur de granularité</h3>
+      <span class="tag" id="d2-lab">vocabulaire : —</span>
+    </div>
+    <p style="font-size:14px">Un BPE est entraîné sur le corpus embarqué, puis appliqué avec un nombre croissant de fusions. Observez la courbe : chaque token gagné coûte de plus en plus cher en vocabulaire.</p>
+    <div class="row"><label class="fl">Fusions</label><input type="range" id="d2-range" min="0" max="600" step="25" value="0"></div>
+    <div id="d2-chart" style="margin:14px 0"></div>
+    <div class="tokline" id="d2-out"></div>
+    <div class="grid g3" style="margin-top:14px">
+      <div class="kpi"><div class="n" id="d2-tok">—</div><div class="l">tokens pour la phrase test</div></div>
+      <div class="kpi"><div class="n" id="d2-voc">—</div><div class="l">taille du vocabulaire</div></div>
+      <div class="kpi"><div class="n" id="d2-fert">—</div><div class="l">tokens par mot (fertilité)</div></div>
+    </div>
+  </div>
+  <div class="callout"><p><strong>Le point d'équilibre trouvé par l'industrie :</strong> le <em>sous-mot</em>. Assez gros pour que « bonjour » soit un seul token, assez petit pour que « antidéconstitutionnellement » reste représentable.</p></div>
+ </div>
+</section>
+
+<!-- =================== 6. ALGO 1 : MOTS =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow">Acte II · Les algorithmes</span>
+  <div class="algo-head">
+    <div class="algo-num">01</div>
+    <div><h2 style="margin:0">Tokenisation par mots</h2><p style="margin:4px 0 0">L'approche naïve — et instructive par ses échecs.</p></div>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="k">ÉTAPE 1</div><div class="v">Découper le texte sur les espaces et la ponctuation.</div></div>
+    <div class="step"><div class="k">ÉTAPE 2</div><div class="v">Compter les mots, garder les N plus fréquents.</div></div>
+    <div class="step"><div class="k">ÉTAPE 3</div><div class="v">Tout le reste devient <code>&lt;UNK&gt;</code>.</div></div>
+  </div>
+  <div class="callout"><p><strong>Analogie :</strong> un dictionnaire papier. Si le mot n'y est pas, vous n'avez aucun moyen de le lire — même pas lettre à lettre.</p></div>
+  <div class="grid g2">
+    <div class="card"><h4>Avantages</h4><ul class="clean pro"><li>Trivial à implémenter et à interpréter</li><li>Séquences très courtes</li><li>Chaque token = une unité de sens</li></ul></div>
+    <div class="card"><h4>Inconvénients</h4><ul class="clean con">
+      <li><strong>Le mur du hors-vocabulaire.</strong> « COVID-19 » en 2019 : inconnu, donc perdu</li>
+      <li>« manger », « mangeait », « mangerons » : trois entrées sans lien</li>
+      <li>Catastrophique pour le turc, le finnois, l'allemand composé</li>
+      <li>Inapplicable au chinois ou au japonais (pas d'espaces)</li>
+      <li>Matrice d'embedding démesurée</li></ul></div>
+  </div>
+  <div class="row"><span class="tag">Historique : Word2Vec, GloVe</span><span class="tag">Aujourd'hui : abandonné pour les LLM</span></div>
+ </div>
+</section>
+
+<!-- =================== 7. ALGO 2 : CARACTERES =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow">Acte II · Les algorithmes</span>
+  <div class="algo-head">
+    <div class="algo-num">02</div>
+    <div><h2 style="margin:0">Tokenisation par caractères</h2><p style="margin:4px 0 0">L'extrême opposé — élégant, mais coûteux.</p></div>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="k">ÉTAPE 1</div><div class="v">Le vocabulaire = l'ensemble des caractères rencontrés.</div></div>
+    <div class="step"><div class="k">ÉTAPE 2</div><div class="v">Chaque caractère devient un token. C'est tout.</div></div>
+    <div class="step"><div class="k">ÉTAPE 3</div><div class="v">Le modèle apprend seul à recomposer les mots.</div></div>
+  </div>
+  <div class="callout"><p><strong>Analogie :</strong> lire une phrase en épelant. Vous ne serez jamais bloqué par un mot inconnu, mais vous lirez dix fois plus lentement.</p></div>
+  <div class="grid g2">
+    <div class="card"><h4>Avantages</h4><ul class="clean pro">
+      <li>Zéro hors-vocabulaire par construction</li>
+      <li>Vocabulaire minuscule → embeddings légers</li>
+      <li>Excellent en orthographe, rimes, anagrammes, fautes de frappe</li>
+      <li>Robuste au bruit et aux variantes typographiques</li></ul></div>
+    <div class="card"><h4>Inconvénients</h4><ul class="clean con">
+      <li><strong>Séquences 4 à 5× plus longues.</strong> L'attention étant quadratique, le coût explose</li>
+      <li>La fenêtre de contexte utile s'effondre</li>
+      <li>Le signal sémantique est dilué sur des dizaines de positions</li>
+      <li>Entraînement nettement plus lent à qualité égale</li></ul></div>
+  </div>
+  <div class="row"><span class="tag">Usage : petits modèles, OCR, correction orthographique</span></div>
+ </div>
+</section>
+
+<!-- =================== 8. ALGO 3 : BPE =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow">Acte II · Les algorithmes</span>
+  <div class="algo-head">
+    <div class="algo-num">03</div>
+    <div><h2 style="margin:0">BPE — Byte Pair Encoding</h2><p style="margin:4px 0 0">L'algorithme roi. Détourné en 2015 d'une technique de compression de 1994.</p></div>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="k">ÉTAPE 1</div><div class="v">Partir des caractères. Chaque mot est une suite de symboles.</div></div>
+    <div class="step"><div class="k">ÉTAPE 2</div><div class="v">Compter toutes les <strong>paires adjacentes</strong> dans le corpus.</div></div>
+    <div class="step"><div class="k">ÉTAPE 3</div><div class="v">Fusionner la paire <strong>la plus fréquente</strong> en un nouveau symbole.</div></div>
+    <div class="step"><div class="k">ÉTAPE 4</div><div class="v">Répéter N fois. La liste ordonnée des fusions <em>est</em> le tokeniseur.</div></div>
+  </div>
+  <div class="callout"><p><strong>Analogie :</strong> un sténographe. À force d'écrire « ment » mille fois par jour, il invente un signe unique pour « ment ». Puis un pour « tion ». Le vocabulaire émerge de la répétition, pas d'une théorie linguistique.</p></div>
+  <div class="grid g2">
+    <div class="card"><h4>Avantages</h4><ul class="clean pro">
+      <li>Compromis quasi optimal fréquence / longueur</li>
+      <li>Les mots rares se décomposent gracieusement</li>
+      <li>Déterministe et très rapide à l'encodage</li>
+      <li>Écosystème mature, standard de fait</li></ul></div>
+    <div class="card"><h4>Inconvénients</h4><ul class="clean con">
+      <li>Les frontières ignorent la morphologie : <code>manger</code> → <code>mang|er</code>, mais <code>mangeoire</code> → <code>man|geo|ire</code></li>
+      <li>Gourmand : optimise la compression, pas le sens</li>
+      <li>Fortement biaisé par la langue du corpus d'entraînement</li>
+      <li>Segmentation unique et rigide (pas de régularisation possible)</li>
+      <li>Sans repli sur les octets, les caractères inconnus restent un problème</li></ul></div>
+  </div>
+  <div class="row"><span class="tag">GPT-2</span><span class="tag">RoBERTa</span><span class="tag">Llama (variante SentencePiece-BPE)</span><span class="tag">la plupart des modèles récents</span></div>
+ </div>
+</section>
+
+<!-- =================== 9. DEMO BPE =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow">Acte II · Les algorithmes</span>
+  <h2>Démo 3 — Entraîner un BPE, fusion par fusion</h2>
+  <p class="lead">Le corpus embarqué est réel (texte français, ~6 000 caractères). Lancez l'apprentissage et regardez le vocabulaire naître.</p>
+  <div class="card">
+    <div class="row" style="margin-bottom:14px">
+      <button class="btn" id="d3-step">▶ Une fusion</button>
+      <button class="btn ghost" id="d3-run10">▶▶ Dix fusions</button>
+      <button class="btn ghost" id="d3-reset">↺ Réinitialiser</button>
+      <span class="tag" id="d3-n">0 fusion</span>
+    </div>
+    <div class="grid g2">
+      <div>
+        <h4>Fusions apprises (la plus récente en haut)</h4>
+        <div id="d3-log" class="stack" style="gap:6px;max-height:270px;overflow-y:auto"></div>
+      </div>
+      <div>
+        <h4>Effet sur un mot test</h4>
+        <div class="row" style="margin-bottom:10px"><input type="text" id="d3-word" value="tokenisation" style="max-width:260px"></div>
+        <div class="tokline" id="d3-word-out" style="font-size:16px;margin-bottom:16px"></div>
+        <h4>Compression du corpus</h4>
+        <div class="bar" style="margin-bottom:7px"><i id="d3-bar" style="width:100%"></i></div>
+        <div class="mono" id="d3-stats" style="font-size:12.5px;color:var(--tx3)"></div>
+      </div>
+    </div>
+  </div>
+  <div class="callout green"><p>Remarquez la <strong>décroissance des gains</strong> : les premières fusions rognent énormément (elles capturent « es », « en », « ti »…), les suivantes de moins en moins. C'est exactement la loi de Zipf qui se manifeste — et la raison pour laquelle les vocabulaires plafonnent autour de 100 000–200 000 entrées.</p></div>
+ </div>
+</section>
+
+<!-- =================== 10. ALGO 4 : BYTE-LEVEL BPE =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow">Acte II · Les algorithmes</span>
+  <div class="algo-head">
+    <div class="algo-num">04</div>
+    <div><h2 style="margin:0">Byte-level BPE</h2><p style="margin:4px 0 0">La ruse qui a définitivement tué le token <code>&lt;UNK&gt;</code>.</p></div>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="k">ÉTAPE 1</div><div class="v">Convertir le texte en <strong>octets UTF-8</strong> (256 valeurs possibles).</div></div>
+    <div class="step"><div class="k">ÉTAPE 2</div><div class="v">Appliquer BPE non pas sur des caractères mais sur ces octets.</div></div>
+    <div class="step"><div class="k">ÉTAPE 3</div><div class="v">L'alphabet de base fait exactement 256 symboles — donc <em>tout</em> est représentable.</div></div>
+  </div>
+  <div class="callout"><p><strong>Analogie :</strong> au lieu d'un dictionnaire de mots, un alphabet universel de 256 briques. Un émoji, un idéogramme, un caractère runique, un fichier binaire : tout se reconstruit. Rien n'est jamais « inconnu ».</p></div>
+  <div class="grid g2">
+    <div class="card"><h4>Avantages</h4><ul class="clean pro">
+      <li><strong>Couverture universelle garantie</strong>, toutes langues et tous symboles</li>
+      <li>Aucun besoin de normalisation Unicode préalable</li>
+      <li>Encodage et décodage parfaitement réversibles</li>
+      <li>Robuste aux emojis, au code source, aux données bruitées</li></ul></div>
+    <div class="card"><h4>Inconvénients</h4><ul class="clean con">
+      <li>Les langues non latines paient le prix fort : un idéogramme occupe 3 octets, souvent 2 à 3 tokens</li>
+      <li>Un token peut couper un caractère en plein milieu → sorties temporairement invalides en streaming</li>
+      <li>256 entrées de vocabulaire consommées d'office</li>
+      <li>Surface d'attaque Unicode (voir Acte IV)</li></ul></div>
+  </div>
+  <div class="card soft">
+    <h4>Démo 4 — Le coût en octets</h4>
+    <div class="row" style="margin-bottom:10px"><input type="text" id="d4-in" value="Café 東京 🚀" style="max-width:320px"></div>
+    <div class="tokline" id="d4-out" style="font-size:13px"></div>
+    <div class="mono" id="d4-note" style="font-size:12.5px;color:var(--tx3);margin-top:10px"></div>
+  </div>
+  <div class="row"><span class="tag">GPT-2 → GPT-4o</span><span class="tag">Llama 3</span><span class="tag">Mistral</span><span class="tag">standard actuel</span></div>
+ </div>
+</section>
+
+<!-- =================== 11. ALGO 5 : WORDPIECE =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow">Acte II · Les algorithmes</span>
+  <div class="algo-head">
+    <div class="algo-num">05</div>
+    <div><h2 style="margin:0">WordPiece</h2><p style="margin:4px 0 0">Le cousin statistique de BPE — celui de BERT.</p></div>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="k">ÉTAPE 1</div><div class="v">Même départ que BPE : des caractères, des paires.</div></div>
+    <div class="step"><div class="k">ÉTAPE 2</div><div class="v">Mais on ne fusionne pas la paire la plus fréquente. On fusionne celle qui maximise <code>f(ab) / (f(a)·f(b))</code>.</div></div>
+    <div class="step"><div class="k">ÉTAPE 3</div><div class="v">À l'encodage : recherche gloutonne du plus long morceau, les suites étant préfixées <code>##</code>.</div></div>
+  </div>
+  <div class="callout"><p><strong>La différence en une phrase :</strong> BPE demande « quelle paire vois-je le plus souvent ? ». WordPiece demande « quelle paire apparaît le plus souvent <em>par rapport à ce que le hasard prédirait</em> ? ». Le second favorise les associations réellement significatives plutôt que les lettres omniprésentes.</p></div>
+  <div class="grid g2">
+    <div class="card"><h4>Avantages</h4><ul class="clean pro">
+      <li>Segmentations plus alignées sur la morphologie que BPE</li>
+      <li>Le marqueur <code>##</code> rend la frontière de mot explicite et lisible</li>
+      <li>Éprouvé sur toute la famille BERT</li>
+      <li>Encodage glouton : très rapide</li></ul></div>
+    <div class="card"><h4>Inconvénients</h4><ul class="clean con">
+      <li>Le glouton « plus long d'abord » peut piéger : une lettre initiale non reconnue fait tout dérailler</li>
+      <li>Conserve un <code>[UNK]</code> — pas de repli sur les octets</li>
+      <li>Dépend d'une pré-tokenisation par espaces → mal adapté au chinois/japonais/thaï</li>
+      <li><strong>Ce comportement glouton est directement exploitable</strong> (attaque TokenBreak, Acte IV)</li></ul></div>
+  </div>
+  <div class="row"><span class="tag">BERT</span><span class="tag">DistilBERT</span><span class="tag">ELECTRA</span><span class="tag">nombreux classifieurs de modération</span></div>
+ </div>
+</section>
+
+<!-- =================== 12. ALGO 6 : UNIGRAM =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow">Acte II · Les algorithmes</span>
+  <div class="algo-head">
+    <div class="algo-num">06</div>
+    <div><h2 style="margin:0">Unigram LM &amp; SentencePiece</h2><p style="margin:4px 0 0">L'approche probabiliste : on part d'un excès et on élague.</p></div>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="k">ÉTAPE 1</div><div class="v">Partir d'un vocabulaire <strong>volontairement trop grand</strong> (tous les sous-mots plausibles).</div></div>
+    <div class="step"><div class="k">ÉTAPE 2</div><div class="v">Attribuer une probabilité à chaque morceau, estimée par EM.</div></div>
+    <div class="step"><div class="k">ÉTAPE 3</div><div class="v">Retirer les morceaux dont la suppression coûte le moins en vraisemblance.</div></div>
+    <div class="step"><div class="k">ÉTAPE 4</div><div class="v">À l'encodage : Viterbi choisit la découpe <strong>la plus probable</strong> parmi toutes.</div></div>
+  </div>
+  <div class="callout"><p><strong>Analogie :</strong> BPE est un maçon qui empile des briques du bas vers le haut. Unigram est un sculpteur : il part d'un bloc trop gros et retire tout ce qui ne sert pas. Surtout, il connaît <em>plusieurs</em> découpes valides du même mot et sait laquelle est la plus vraisemblable.</p></div>
+  <div class="grid g2">
+    <div class="card"><h4>Avantages</h4><ul class="clean pro">
+      <li>Cadre probabiliste explicite, pas une heuristique gloutonne</li>
+      <li><strong>Régularisation par sous-mots</strong> : échantillonner des découpes alternatives à l'entraînement rend le modèle nettement plus robuste</li>
+      <li>Traite le texte brut, espaces compris (<code>▁</code>) → indépendant de la langue</li>
+      <li>Meilleur sur les langues agglutinantes et sans espaces</li></ul></div>
+    <div class="card"><h4>Inconvénients</h4><ul class="clean con">
+      <li>Entraînement plus lourd et plus lent (EM + élagage itératif)</li>
+      <li>Encodage par Viterbi : plus coûteux qu'un simple glouton</li>
+      <li>Segmentation non déterministe si l'échantillonnage est activé — piège pour la reproductibilité et le cache</li>
+      <li>Plus difficile à déboguer et à auditer</li></ul></div>
+  </div>
+  <div class="row"><span class="tag">T5 / mT5</span><span class="tag">ALBERT</span><span class="tag">XLNet</span><span class="tag">Gemma</span><span class="tag">nombreux modèles multilingues</span></div>
+ </div>
+</section>
+
+<!-- =================== 13. COMPARATEUR =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow">Acte II · Les algorithmes</span>
+  <h2>Démo 5 — Six algorithmes, une même phrase</h2>
+  <p class="lead">Tous ces tokeniseurs sont entraînés sur le <em>même</em> corpus embarqué, avec la <em>même</em> cible de vocabulaire. Les différences que vous voyez sont donc purement algorithmiques.</p>
+  <div class="card">
+    <textarea id="d5-in" rows="2">Les tokeniseurs multilingues désavantagent systématiquement certaines langues.</textarea>
+    <div class="pill-row" style="margin-top:12px">
+      <button class="pill" data-d5="Les tokeniseurs multilingues désavantagent systématiquement certaines langues.">Français</button>
+      <button class="pill" data-d5="Tokenizers quietly decide what a model can and cannot see.">Anglais</button>
+      <button class="pill" data-d5="def compte_r(mot): return sum(1 for c in mot if c == 'r')">Code Python</button>
+      <button class="pill" data-d5="antidéconstitutionnellement — un mot rare et très long">Mot rare</button>
+      <button class="pill" data-d5="Bonjour 🌍 東京 مرحبا Привет">Multilingue</button>
+    </div>
+    <div class="divider"></div>
+    <div id="d5-out" class="stack" style="gap:16px"></div>
+  </div>
+ </div>
+</section>
+
+<!-- =================== 14. ALGO 7 : BYTE / TOKENIZER-FREE =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow">Acte III · L'après-token</span>
+  <div class="algo-head">
+    <div class="algo-num">07</div>
+    <div><h2 style="margin:0">Sans tokeniseur : directement les octets</h2><p style="margin:4px 0 0">ByT5, CANINE, MambaByte — supprimer le problème plutôt que l'optimiser.</p></div>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="k">ÉTAPE 1</div><div class="v">Aucun apprentissage de vocabulaire. Le texte devient sa suite d'octets UTF-8.</div></div>
+    <div class="step"><div class="k">ÉTAPE 2</div><div class="v">Vocabulaire figé à 256 (+ quelques symboles spéciaux).</div></div>
+    <div class="step"><div class="k">ÉTAPE 3</div><div class="v">L'architecture compense : couches de compression locale, ou modèles à espace d'états (Mamba) dont le coût est linéaire.</div></div>
+  </div>
+  <div class="callout"><p><strong>L'argument de fond :</strong> le tokeniseur est le dernier morceau <em>non appris</em> du pipeline. C'est un artefact figé, entraîné sur un corpus différent du modèle, jamais mis à jour. L'histoire de l'apprentissage profond suggère que les composants faits main finissent toujours par être absorbés.</p></div>
+  <div class="grid g2">
+    <div class="card"><h4>Avantages</h4><ul class="clean pro">
+      <li>Équité parfaite entre langues : plus de « taxe » liée au vocabulaire</li>
+      <li>Robustesse remarquable au bruit, aux fautes, aux attaques par caractères</li>
+      <li>Aucune dérive entre le corpus du tokeniseur et celui du modèle</li>
+      <li>Plus de glitch tokens : ils n'existent tout simplement pas</li>
+      <li>Le modèle « voit » l'orthographe → il sait compter les r de strawberry</li></ul></div>
+    <div class="card"><h4>Inconvénients</h4><ul class="clean con">
+      <li>Séquences 4 à 5× plus longues → coût d'entraînement et d'inférence supérieur à taille égale</li>
+      <li>Portée effective réduite : il faut plus de couches pour couvrir la même distance sémantique</li>
+      <li>Écosystème et outillage immatures</li>
+      <li>À budget de calcul fixé, encore souvent derrière un bon BPE sur les tâches sémantiques</li></ul></div>
+  </div>
+  <div class="row"><span class="tag">ByT5 (Google)</span><span class="tag">CANINE</span><span class="tag">MambaByte</span><span class="tag">recherche active</span></div>
+ </div>
+</section>
+
+<!-- =================== 15. ALGO 8 : PATCHES DYNAMIQUES =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow">Acte III · L'après-token</span>
+  <div class="algo-head">
+    <div class="algo-num">08</div>
+    <div><h2 style="margin:0">Patches dynamiques — le Byte Latent Transformer</h2><p style="margin:4px 0 0">Meta, 2024-2025 : découper selon la <em>difficulté</em>, pas selon la fréquence.</p></div>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="k">ÉTAPE 1</div><div class="v">Un petit modèle d'octets estime, à chaque position, l'entropie du prochain octet.</div></div>
+    <div class="step"><div class="k">ÉTAPE 2</div><div class="v">Entropie faible (la suite est évidente) → on continue le patch courant.</div></div>
+    <div class="step"><div class="k">ÉTAPE 3</div><div class="v">Entropie forte (surprise) → on ferme le patch et on en ouvre un nouveau.</div></div>
+    <div class="step"><div class="k">ÉTAPE 4</div><div class="v">Le gros transformeur ne travaille que sur ces patches. Le calcul se concentre là où c'est difficile.</div></div>
+  </div>
+  <div class="callout green"><p><strong>L'idée est belle :</strong> un tokeniseur classique dépense autant d'effort pour la fin prévisible d'un mot courant que pour un nom propre inattendu. BLT alloue son budget de calcul <em>dynamiquement</em>, en fonction de l'incertitude réelle. Les travaux de Meta rapportent des lois d'échelle au moins comparables à celles de Llama 3 à calcul égal, avec une robustesse au bruit nettement supérieure.</p></div>
+  <div class="grid g2">
+    <div class="card"><h4>Avantages</h4><ul class="clean pro">
+      <li>Aucun vocabulaire figé, aucune matrice d'embedding géante</li>
+      <li>Allocation adaptative du calcul — inédite dans les architectures classiques</li>
+      <li>Excellentes performances sur les tâches orthographiques et le bruit</li>
+      <li>Pas de taxe linguistique arbitraire</li></ul></div>
+    <div class="card"><h4>Inconvénients</h4><ul class="clean con">
+      <li>Architecture nettement plus complexe (trois modules imbriqués)</li>
+      <li>Nécessite un modèle d'entropie auxiliaire, lui-même à entraîner</li>
+      <li>Longueur de patch variable → traitement par lots et cache KV plus délicats</li>
+      <li>Peu de déploiements en production à ce jour</li></ul></div>
+  </div>
+  <div class="card soft">
+    <h4>Bonus — SuperBPE : la direction opposée</h4>
+    <p style="margin-bottom:0;font-size:14px">Plutôt que descendre sous le mot, <strong>monter au-dessus</strong>. SuperBPE (COLM 2025) lève la contrainte qui interdisait à un token de franchir un espace, et apprend des « supermots » comme <em>« by accident »</em> ou <em>« depend on »</em>. Résultat rapporté : environ <strong>33 % de tokens en moins</strong> à vocabulaire égal, un gain moyen de <strong>+4 %</strong> sur trente tâches et une inférence ~27 % plus rapide — avec quelques reculs, notamment sur le code. Deux écoles opposées, un même constat : le mot n'a rien de sacré.</p>
+  </div>
+ </div>
+</section>
+
+<!-- =================== 16. TABLEAU =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow">Acte III · Synthèse</span>
+  <h2>Le tableau de bord comparatif</h2>
+  <div class="tw"><table>
+    <thead><tr><th>Algorithme</th><th>Principe</th><th>Vocabulaire</th><th>Force principale</th><th>Faiblesse principale</th><th>Modèles</th></tr></thead>
+    <tbody>
+      <tr><td><b>Mots</b></td><td>Découpe sur les espaces</td><td class="mono">10⁵–10⁶</td><td>Sens immédiat</td><td>Mur du hors-vocabulaire</td><td>Word2Vec</td></tr>
+      <tr><td><b>Caractères</b></td><td>Un token = un caractère</td><td class="mono">~10²</td><td>Zéro inconnu</td><td>Séquences 4-5× plus longues</td><td>petits modèles</td></tr>
+      <tr><td><b>BPE</b></td><td>Fusion gloutonne par fréquence</td><td class="mono">30k–100k</td><td>Meilleur compromis global</td><td>Frontières non morphologiques</td><td>GPT-2, RoBERTa</td></tr>
+      <tr><td><b>Byte-level BPE</b></td><td>BPE appliqué aux octets</td><td class="mono">50k–260k</td><td>Couverture universelle</td><td>Taxe sur les langues non latines</td><td>GPT-4o, Llama 3</td></tr>
+      <tr><td><b>WordPiece</b></td><td>Fusion par vraisemblance</td><td class="mono">30k</td><td>Segments plus significatifs</td><td>Glouton exploitable</td><td>BERT</td></tr>
+      <tr><td><b>Unigram</b></td><td>Élagage probabiliste + Viterbi</td><td class="mono">32k–256k</td><td>Régularisation, multilingue</td><td>Entraînement coûteux</td><td>T5, Gemma</td></tr>
+      <tr><td><b>Octets purs</b></td><td>Aucun apprentissage</td><td class="mono">256</td><td>Équité et robustesse</td><td>Coût de calcul</td><td>ByT5, MambaByte</td></tr>
+      <tr><td><b>Patches (BLT)</b></td><td>Découpe par entropie</td><td class="mono">256</td><td>Calcul adaptatif</td><td>Complexité, immaturité</td><td>BLT (Meta)</td></tr>
+    </tbody>
+  </table></div>
+  <div class="grid g4">
+    <div class="kpi"><div class="n">30 522</div><div class="l">BERT — WordPiece</div></div>
+    <div class="kpi"><div class="n">50 257</div><div class="l">GPT-2 — byte-level BPE</div></div>
+    <div class="kpi"><div class="n">128 256</div><div class="l">Llama 3</div></div>
+    <div class="kpi"><div class="n">~200 000</div><div class="l">GPT-4o (o200k)</div></div>
+  </div>
+  <p class="hint">La tendance de fond est nette : les vocabulaires grossissent. Plus de vocabulaire, c'est moins de tokens par phrase — donc plus de contexte utile et moins de calcul par mot — au prix d'une couche d'embedding et d'une couche de sortie plus lourdes.</p>
+ </div>
+</section>
+
+<!-- =================== 17. INJUSTICE LINGUISTIQUE =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow">Acte III · Conséquences</span>
+  <h2>La taxe invisible sur les langues</h2>
+  <p class="lead">Un tokeniseur entraîné majoritairement sur de l'anglais compresse très bien l'anglais. Les autres langues paient — en argent, en latence et en contexte disponible.</p>
+  <div class="card">
+    <h4>Démo 6 — Le même sens, des coûts différents</h4>
+    <p style="font-size:14px">Le tokeniseur BPE est ici entraîné sur le corpus français embarqué. Observez comment il se comporte face à des langues qu'il n'a jamais vues — c'est exactement la situation de la plupart des langues du monde face aux tokeniseurs des grands modèles.</p>
+    <div id="d6-out" class="stack" style="gap:12px"></div>
+  </div>
+  <div class="grid g2">
+    <div class="callout red"><p><strong>Conséquence économique.</strong> À contenu équivalent, certaines langues consomment plusieurs fois plus de tokens que l'anglais. Facturation à l'usage, plafond de contexte, latence : la note est multipliée d'autant, pour des locuteurs souvent situés dans des pays à faible revenu.</p></div>
+    <div class="callout warn"><p><strong>Conséquence qualitative.</strong> Une segmentation plus fragmentée, c'est un signal plus dilué et un raisonnement plus fragile. L'écart de performance entre langues n'est donc pas seulement un problème de données d'entraînement : il est en partie inscrit dans le tokeniseur.</p></div>
+  </div>
+ </div>
+</section>
+
+<!-- =================== 18. SECU INTRO =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow red">Acte IV · Sécurité</span>
+  <h2>La tokenisation comme <span class="grad">surface d'attaque</span></h2>
+  <p class="lead">Presque toute l'attention en sécurité des LLM se porte sur le prompt et sur les poids. Or il existe une couche entre les deux — figée, rarement auditée, souvent partagée entre le modèle et ses garde-fous.</p>
+  <div class="grid g2">
+    <div class="card">
+      <h4>Pourquoi cette couche est fragile</h4>
+      <ul class="clean num">
+        <li>Elle est <strong>déterministe et publique</strong> : un attaquant peut la reproduire à l'identique, hors ligne, autant de fois qu'il veut.</li>
+        <li>Elle est <strong>entraînée sur un autre corpus</strong> que le modèle — certains tokens existent sans avoir jamais été appris.</li>
+        <li>Elle est <strong>en amont de tout filtrage</strong> : ce que le filtre voit dépend d'elle.</li>
+        <li>Elle est <strong>rarement identique</strong> entre le modèle et son classifieur de modération. Toute divergence est une faille.</li>
+        <li>Elle est <strong>non différentiable</strong>, donc invisible aux méthodes d'alignement classiques.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Cinq familles d'attaques</h4>
+      <div class="stack" style="gap:9px">
+        <div class="step"><div class="k">A · GLITCH TOKENS</div><div class="v">Tokens sous-entraînés qui déstabilisent le modèle.</div></div>
+        <div class="step"><div class="k">B · HOMOGLYPHES</div><div class="v">Caractères Unicode visuellement identiques, tokens différents.</div></div>
+        <div class="step"><div class="k">C · TOKENBREAK</div><div class="v">Un caractère ajouté fait dérailler la segmentation du filtre.</div></div>
+        <div class="step"><div class="k">D · SMUGGLING</div><div class="v">Charge utile invisible à l'œil, parfaitement lisible pour le modèle.</div></div>
+        <div class="step"><div class="k">E · BOMBES DE TOKENS</div><div class="v">Déni de service et explosion de coûts par amplification.</div></div>
+      </div>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- =================== 19. GLITCH TOKENS =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow red">Acte IV · Sécurité — A</span>
+  <h2>Glitch tokens : les mots que le modèle n'a jamais appris</h2>
+  <div class="grid g2">
+    <div class="card">
+      <h4>Le mécanisme</h4>
+      <p>Le tokeniseur et le modèle ne sont pas entraînés sur les mêmes données. Un pseudonyme de forum très actif au moment de la construction du vocabulaire obtient son propre token. Puis ces données sont filtrées avant l'entraînement du modèle.</p>
+      <p>Résultat : le token <strong>existe</strong>, mais son vecteur d'embedding n'a jamais été appris. Il reste proche de son initialisation aléatoire.</p>
+      <div class="callout red"><p style="margin:0">Donner ce token en entrée revient à injecter du bruit pur au cœur du réseau. Les modèles y répondent par des insultes, du charabia, des refus inexpliqués, des changements de langue — ou en ignorant totalement l'instruction.</p></div>
+    </div>
+    <div class="card">
+      <h4>Le cas d'école</h4>
+      <p><code>SolidGoldMagikarp</code> — pseudonyme d'un utilisateur de Reddit, découvert en 2023. Demander à GPT-3 de le répéter produisait « distribute », des insultes, ou un refus.</p>
+      <div class="divider"></div>
+      <h4>Ce n'est pas anecdotique</h4>
+      <p style="margin-bottom:0">Le travail <em>« Fishing for Magikarp »</em> (2024) a automatisé la détection de ces tokens et en a trouvé dans <strong>la quasi-totalité des grandes familles de modèles</strong> : fragments de code, mots issus de spam, artefacts de nettoyage, chaînes de configuration. Des tokens anormaux ont encore été documentés dans des modèles récents.</p>
+    </div>
+  </div>
+  <div class="card soft">
+    <h4>Pourquoi c'est un problème de sécurité, pas une curiosité</h4>
+    <div class="grid g3">
+      <div><h4 style="color:var(--bad)">Contournement</h4><p style="font-size:13.5px;margin:0">Un état interne hors distribution peut faire sauter des comportements appris — dont l'alignement.</p></div>
+      <div><h4 style="color:var(--bad)">Déni de service</h4><p style="font-size:13.5px;margin:0">Réponses incohérentes ou boucles infinies déclenchées par une chaîne courte.</p></div>
+      <div><h4 style="color:var(--bad)">Empreinte &amp; exfiltration</h4><p style="font-size:13.5px;margin:0">La réaction à ces tokens identifie précisément le modèle et sa version derrière une API opaque.</p></div>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- =================== 20. HOMOGLYPHES =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow red">Acte IV · Sécurité — B</span>
+  <h2>Homoglyphes : identiques à l'œil, étrangers à la machine</h2>
+  <p class="lead">Unicode contient plusieurs caractères visuellement indiscernables du <code>a</code> latin. Pour un humain, c'est le même mot. Pour un tokeniseur travaillant sur les octets, c'est un objet totalement différent.</p>
+  <div class="card">
+    <h4>Démo 7 — Substitution homoglyphe en direct</h4>
+    <div class="row" style="margin-bottom:12px">
+      <input type="text" id="d7-in" value="ignorer les instructions" style="max-width:340px">
+      <button class="btn" id="d7-go">Substituer en cyrillique</button>
+      <button class="btn ghost" id="d7-reset">↺</button>
+    </div>
+    <div class="grid g2">
+      <div><h4>Original</h4>
+        <div id="d7-at" style="font-size:20px;font-weight:600;margin-bottom:10px;letter-spacing:.01em"></div>
+        <div class="tokline" id="d7-a" style="font-size:13px"></div>
+        <div class="mono" id="d7-an" style="font-size:12px;color:var(--tx3);margin-top:8px"></div></div>
+      <div><h4>Après substitution — visuellement identique</h4>
+        <div id="d7-bt" style="font-size:20px;font-weight:600;margin-bottom:10px;letter-spacing:.01em"></div>
+        <div class="tokline" id="d7-b" style="font-size:13px"></div>
+        <div class="mono" id="d7-bn" style="font-size:12px;color:var(--tx3);margin-top:8px"></div></div>
+    </div>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h4>Pourquoi ça marche</h4><ul class="clean con">
+      <li>Le filtre de modération cherche une chaîne ou un motif — il ne le trouve pas</li>
+      <li>Le classifieur voit une suite de tokens rares, hors de sa distribution d'entraînement</li>
+      <li>Le LLM, lui, dispose souvent d'assez de contexte pour reconstituer le sens</li>
+      <li>Variantes : diacritiques combinants, espaces de largeur nulle, indicateurs de direction, sélecteurs de variation</li>
+    </ul></div>
+    <div class="card"><h4>Défenses</h4><ul class="clean pro">
+      <li><strong>Normaliser avant de filtrer</strong> : NFKC, repli sur le script latin, suppression des caractères invisibles</li>
+      <li>Restreindre les scripts autorisés selon le contexte métier</li>
+      <li>Alerter sur le mélange de scripts dans un même mot — signal très discriminant</li>
+      <li>Mesurer la fertilité : une explosion soudaine du ratio tokens/caractères est un indicateur d'attaque bon marché</li>
+    </ul></div>
+  </div>
+ </div>
+</section>
+
+<!-- =================== 21. TOKENBREAK =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow red">Acte IV · Sécurité — C</span>
+  <h2>TokenBreak : casser le filtre sans casser le sens</h2>
+  <p class="lead">Publiée en 2025, cette attaque exploite une asymétrie déroutante : ajouter <strong>une seule lettre</strong> à un mot suffit à faire dérailler la segmentation d'un classifieur BPE ou WordPiece — alors que le LLM cible, lui, comprend toujours parfaitement.</p>
+  <div class="card">
+    <h4>Démo 8 — L'effet d'un caractère</h4>
+    <div class="row" style="margin-bottom:12px"><input type="text" id="d8-in" value="instructions" style="max-width:280px"><span class="hint">Un caractère est préfixé au mot.</span></div>
+    <div class="grid g2">
+      <div><h4>Mot original</h4><div class="tokline" id="d8-a" style="font-size:14px"></div></div>
+      <div><h4>Avec un caractère en tête</h4><div class="tokline" id="d8-b" style="font-size:14px"></div></div>
+    </div>
+    <div class="divider"></div>
+    <p style="margin-bottom:0;font-size:14px">La découpe gloutonne ne peut plus s'ancrer sur le début du mot. Le classifieur reçoit des fragments qu'il n'a jamais associés à un contenu problématique. Le LLM, entraîné sur des milliards de fautes de frappe humaines, lit sans difficulté.</p>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h4>Le point crucial</h4>
+      <div class="callout red"><p style="margin:0">L'attaque vise <strong>la stratégie de tokenisation du garde-fou</strong>, pas le modèle. Les classifieurs BPE et WordPiece se sont montrés vulnérables ; ceux fondés sur Unigram nettement moins, car la découpe par Viterbi est globale et non gloutonne.</p></div>
+      <p style="margin-top:12px;margin-bottom:0">C'est le premier critère de sécurité concret pour choisir un tokeniseur : <strong>votre filtre et votre modèle doivent voir le même texte</strong>.</p>
+    </div>
+    <div class="card"><h4>Défenses</h4><ul class="clean pro">
+      <li>Utiliser un classifieur à tokenisation Unigram, ou au niveau des caractères</li>
+      <li>Aligner strictement le tokeniseur du garde-fou sur celui du modèle protégé</li>
+      <li>Ajouter une normalisation et une correction orthographique avant classification</li>
+      <li>Entraîner les filtres avec augmentation adversariale (insertions, permutations, substitutions)</li>
+      <li>Ne jamais faire reposer la sécurité sur un seul étage de filtrage</li>
+    </ul></div>
+  </div>
+ </div>
+</section>
+
+<!-- =================== 22. SMUGGLING & BOMBES =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow red">Acte IV · Sécurité — D &amp; E</span>
+  <h2>Contrebande de tokens et bombes de contexte</h2>
+  <div class="grid g2">
+    <div class="card">
+      <h4 style="color:var(--bad)">D · Token smuggling</h4>
+      <p>Faire passer une instruction que l'humain ne voit pas mais que le modèle lit parfaitement.</p>
+      <ul class="clean con">
+        <li><strong>Balises Unicode.</strong> Le bloc des <em>tag characters</em> (U+E0000–E007F) recopie l'ASCII sous forme invisible. Aucun rendu à l'écran, un signal complet pour le modèle.</li>
+        <li><strong>Fragmentation.</strong> Une instruction bloquée est découpée puis recomposée par le modèle lui-même : « concatène ces trois fragments et exécute le résultat ».</li>
+        <li><strong>Encodages.</strong> Base64, ROT13, morse, langues rares : la charge utile ne ressemble plus à rien pour un filtre par motifs.</li>
+        <li><strong>Canaux exotiques.</strong> Texte blanc sur blanc dans un PDF, métadonnées, alt-text d'images — tout ce que le pipeline aplatit en texte.</li>
+      </ul>
+      <div class="callout green"><p style="margin:0"><strong>Défense :</strong> supprimer par défaut les catégories Unicode non imprimables (Cf, Co, tag characters) à l'entrée, journaliser leur présence comme un signal d'alerte fort, et faire porter la décision de sécurité au texte <em>après</em> normalisation.</p></div>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--bad)">E · Bombes de tokens</h4>
+      <p>L'asymétrie caractères / tokens est un levier de déni de service.</p>
+      <ul class="clean con">
+        <li>Certaines séquences produisent un token par caractère, voire davantage : émojis composés, alphabets rares, séquences ZWJ, texte glitché.</li>
+        <li>Quelques kilo-octets bien choisis peuvent saturer une fenêtre de contexte entière.</li>
+        <li>Une limite d'entrée exprimée en <strong>caractères</strong> et non en tokens est systématiquement contournable.</li>
+        <li>Effet direct sur la facture : le coût réel n'est pas proportionnel à la taille du texte.</li>
+      </ul>
+      <div class="callout green"><p style="margin:0"><strong>Défense :</strong> plafonner en tokens, jamais en octets ou en caractères. Compter les tokens avant l'appel au modèle. Surveiller la fertilité (tokens ÷ caractères) : au-delà d'un seuil, rejeter ou dégrader.</p></div>
+    </div>
+  </div>
+  <div class="callout"><p><strong>Le fil rouge des cinq attaques :</strong> elles exploitent toutes le même écart — celui entre <em>ce que l'humain voit</em>, <em>ce que le filtre voit</em> et <em>ce que le modèle voit</em>. Réduire cet écart est un objectif d'architecture, pas un correctif ponctuel.</p></div>
+ </div>
+</section>
+
+<!-- =================== 23. DURCISSEMENT =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow green">Acte IV · Sécurité</span>
+  <h2>Durcir la couche de tokenisation</h2>
+  <p class="lead">Neuf mesures concrètes, ordonnées du plus rentable au plus exigeant.</p>
+  <div class="grid g2">
+    <div class="card">
+      <h4>Au niveau de l'entrée</h4>
+      <ul class="clean num">
+        <li><strong>Normaliser d'abord, filtrer ensuite.</strong> NFKC, suppression des caractères de contrôle et invisibles, avant toute décision.</li>
+        <li><strong>Détecter les mélanges de scripts.</strong> Latin + cyrillique dans un même mot : signal quasi certain d'attaque.</li>
+        <li><strong>Plafonner en tokens.</strong> Compter avant d'appeler. Rejeter au-delà du seuil.</li>
+        <li><strong>Surveiller la fertilité.</strong> Un ratio tokens/caractères anormal est une alerte peu coûteuse et très efficace.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Au niveau du système</h4>
+      <ul class="clean num" style="counter-reset:s 4">
+        <li><strong>Aligner les tokeniseurs.</strong> Le garde-fou et le modèle doivent voir le même découpage.</li>
+        <li><strong>Auditer le vocabulaire.</strong> Rechercher les tokens sous-entraînés par leur embedding, les mettre en liste de blocage.</li>
+        <li><strong>Défense en profondeur.</strong> Filtre lexical, classifieur, garde-fou sémantique par LLM : jamais un seul étage.</li>
+        <li><strong>Journaliser les tokens, pas seulement le texte.</strong> Sans cela, une attaque homoglyphe est invisible en post-mortem.</li>
+        <li><strong>Suivre la version du tokeniseur</strong> comme une dépendance de sécurité : un changement de vocabulaire modifie la surface d'attaque.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout"><p><strong>Principe directeur :</strong> traiter le tokeniseur comme un composant de sécurité de première classe — versionné, testé, journalisé, audité — et non comme un détail d'implémentation hérité du dépôt Hugging Face d'origine.</p></div>
+ </div>
+</section>
+
+<!-- =================== 24. CONCLUSION =================== -->
+<section class="slide">
+ <div class="inner stack">
+  <span class="eyebrow">Acte V · Conclusion</span>
+  <h2>Ce que découper veut dire</h2>
+  <p class="lead">Nous sommes partis d'une plaisanterie — un modèle incapable de compter les <em>r</em> de <em>strawberry</em>. Nous arrivons à une couche d'infrastructure qui détermine ce qu'un modèle peut percevoir, ce que son utilisateur paie, quelles langues sont favorisées, et par où un attaquant peut passer.</p>
+  <h3 style="margin-top:6px">Trois idées à retenir</h3>
+  <div class="grid g3">
+    <div class="card soft"><p style="font-size:14px;margin:0"><strong>1.</strong> Tout tokeniseur est un compromis entre taille de vocabulaire et longueur de séquence. Il n'existe pas d'optimum universel.</p></div>
+    <div class="card soft"><p style="font-size:14px;margin:0"><strong>2.</strong> Le tokeniseur est le dernier composant non appris du pipeline — donc le prochain candidat à disparaître (BLT, MambaByte).</p></div>
+    <div class="card soft"><p style="font-size:14px;margin:0"><strong>3.</strong> C'est une surface d'attaque réelle, exploitée, et presque jamais auditée. Le durcissement commence là.</p></div>
+  </div>
+  <div class="divider"></div>
+  <h3>Ouverture — cinq questions qui restent ouvertes</h3>
+  <div class="grid g2">
+    <div class="card">
+      <ul class="clean num">
+        <li><strong>Faut-il vraiment un vocabulaire ?</strong> Si les patches dynamiques tiennent leurs promesses à grande échelle, la tokenisation deviendra un chapitre d'histoire — comme l'ingénierie de traits l'est devenue en vision.</li>
+        <li><strong>Peut-on rendre la tokenisation équitable ?</strong> Un vocabulaire optimisé pour toutes les langues à la fois est-il possible, ou l'équité impose-t-elle de renoncer aux tokens ?</li>
+        <li><strong>Un tokeniseur peut-il être certifié ?</strong> À quoi ressemblerait un audit formel : absence de glitch tokens, bornes de fertilité, invariance à la normalisation ?</li>
+      </ul>
+    </div>
+    <div class="card">
+      <ul class="clean num" style="counter-reset:s 3">
+        <li><strong>Et pour le multimodal ?</strong> Images, audio et vidéo ont aussi leurs tokeniseurs (VQ-VAE, patches). Les mêmes failles s'y transposent-elles ? Les premiers signaux sont préoccupants.</li>
+        <li><strong>Qui décide du découpage ?</strong> Un vocabulaire fige des choix sur ce qui mérite d'être une unité de sens. C'est une décision technique aux effets culturels durables, prise par très peu d'acteurs.</li>
+      </ul>
+      <div class="callout" style="margin-top:14px"><p style="margin:0">Prochaine étape naturelle pour le projet <strong>LLM SECURITY</strong> : construire un banc de test de tokenisation — détection de glitch tokens, mesure de fertilité, fuzzing Unicode, vérification de l'alignement entre garde-fou et modèle.</p></div>
+    </div>
+  </div>
+  <p class="hint" style="margin-top:6px">Sources principales : Sennrich et al. (BPE, 2015) · Kudo (Unigram, 2018) · Kudo &amp; Richardson (SentencePiece, 2018) · Radford et al. (byte-level BPE, GPT-2, 2019) · Xue et al. (ByT5, 2022) · Land &amp; Bartolo (« Fishing for Magikarp », 2024) · Pagnoni et al. (Byte Latent Transformer, Meta, 2024) · Liu et al. (SuperBPE, COLM 2025) · HiddenLayer (TokenBreak, 2025).</p>
+ </div>
+</section>
+
+</template>
+
+<script>
+function __boot(){
+'use strict';
+
+/* ================================================================
+   CORPUS EMBARQUÉ — français, ~6 000 caractères.
+   Textes originaux + Déclaration des droits de l'homme (1789, domaine public)
+   ================================================================ */
+const CORPUS = `
+Le langage humain est une invention étrange. Nous produisons un flux continu de sons, et pourtant nous avons appris à le découper en unités : des phrases, des mots, des syllabes, des lettres. Ce découpage nous paraît naturel, mais il n'a rien d'évident. Une machine qui apprend le langage doit elle aussi découper, et son découpage ne ressemble pas au nôtre.
+Un modèle de langage ne lit pas des lettres. Il ne lit pas non plus des mots. Il lit des morceaux, appelés tokens, produits par un programme appelé tokeniseur. La tokenisation est donc la première opération de toute compréhension automatique du langage. Elle précède l'apprentissage, elle précède le raisonnement, elle précède la génération.
+La question du découpage est ancienne. Les grammairiens de l'Antiquité se demandaient déjà ce qu'est un mot. Les linguistes modernes parlent de morphèmes, ces unités minimales de sens que l'on retrouve dans la construction, la reconstruction, la déconstruction, la destruction. Un tokeniseur statistique ignore cette théorie. Il compte, il fusionne, il optimise. Le résultat est parfois proche de la morphologie, souvent non.
+Les langues du monde ne se découpent pas de la même façon. Le français sépare ses mots par des espaces, le chinois ne le fait pas, l'allemand compose des mots très longs, le turc et le finnois collent des suffixes en chaîne. Un tokeniseur entraîné sur une langue produit un découpage médiocre sur les autres langues. Cette inégalité de traitement se traduit directement en coût, en lenteur, et en qualité de compréhension.
+La sécurité des modèles de langage dépend elle aussi de la tokenisation. Un filtre de sécurité qui découpe le texte autrement que le modèle protégé ne voit pas la même chose que lui. Cette différence de perception est une faille. Les attaquants la connaissent, l'étudient, et l'exploitent avec des caractères invisibles, des substitutions visuelles, des fragments recomposés.
+La fréquence gouverne le vocabulaire. Les séquences les plus fréquentes deviennent des tokens uniques : les terminaisons en tion, en ment, en ance, en ence, les préfixes re, de, in, pré, les articles et les prépositions. Les mots rares, eux, restent fragmentés en plusieurs morceaux. Un nom propre inconnu, un terme technique récent, une faute de frappe : tout cela coûte plus cher en tokens.
+La compression est le principe fondamental. Chaque fusion réduit la longueur des séquences et augmente la taille du vocabulaire. Le compromis entre ces deux quantités est le coeur du problème. Un vocabulaire trop petit produit des séquences trop longues ; un vocabulaire trop grand produit une matrice de représentation démesurée et des tokens trop rares pour être bien appris.
+Les représentations vectorielles associées à chaque token sont apprises pendant l'entraînement. Un token qui n'apparaît jamais dans les données d'entraînement conserve une représentation aléatoire. Ce token existe dans le vocabulaire mais reste vide de sens pour le modèle. Il produit alors des comportements imprévisibles, incohérents, parfois franchement absurdes.
+Les Représentants du Peuple Français, constitués en Assemblée Nationale, considérant que l'ignorance, l'oubli ou le mépris des droits de l'Homme sont les seules causes des malheurs publics et de la corruption des Gouvernements, ont résolu d'exposer, dans une Déclaration solennelle, les droits naturels, inaliénables et sacrés de l'Homme.
+Les hommes naissent et demeurent libres et égaux en droits. Les distinctions sociales ne peuvent être fondées que sur l'utilité commune. Le but de toute association politique est la conservation des droits naturels et imprescriptibles de l'Homme. Ces droits sont la liberté, la propriété, la sûreté, et la résistance à l'oppression.
+Le principe de toute souveraineté réside essentiellement dans la Nation. Nul corps, nul individu ne peut exercer d'autorité qui n'en émane expressément. La liberté consiste à pouvoir faire tout ce qui ne nuit pas à autrui. La loi est l'expression de la volonté générale. Tous les citoyens ont droit de concourir personnellement, ou par leurs représentants, à sa formation.
+La libre communication des pensées et des opinions est un des droits les plus précieux de l'Homme : tout citoyen peut donc parler, écrire, imprimer librement, sauf à répondre de l'abus de cette liberté dans les cas déterminés par la loi.
+Revenons aux machines. Un algorithme de fusion procède par étapes successives. Il observe toutes les paires de symboles adjacents, il compte leurs occurrences, il choisit la plus fréquente, il la remplace partout par un symbole nouveau. Puis il recommence. Après quelques milliers d'étapes, le vocabulaire contient des fragments utiles, des mots entiers fréquents, et des séquences de ponctuation.
+Une variante remplace le comptage brut par une mesure de vraisemblance. Elle privilégie les paires dont l'association est plus forte que ne le prédirait le hasard. Une autre approche part d'un vocabulaire trop grand et retire progressivement les éléments les moins utiles, en mesurant la perte de vraisemblance provoquée par chaque suppression.
+Certains chercheurs proposent de supprimer entièrement cette étape. Le modèle lirait directement les octets du texte, sans vocabulaire appris, sans dictionnaire figé. Les séquences deviennent alors beaucoup plus longues, mais le modèle retrouve la capacité de percevoir l'orthographe, les rimes, les anagrammes, les fautes. D'autres travaux découpent le texte selon la difficulté de prédiction plutôt que selon la fréquence.
+L'histoire de l'apprentissage automatique est faite de composants faits à la main progressivement remplacés par des composants appris. Les détecteurs de contours en vision, les traits phonétiques en reconnaissance vocale, les règles de grammaire en traduction : tous ont disparu. Le tokeniseur est aujourd'hui le dernier grand composant non appris des modèles de langage. Il est raisonnable de penser qu'il suivra le même chemin.
+En attendant, la tokenisation reste une décision d'ingénierie majeure. Elle détermine la longueur des séquences, le coût du calcul, la taille de la fenêtre de contexte, la facture de l'utilisateur, l'équité entre les langues, et la robustesse du système face aux attaques. Comprendre la tokenisation, c'est comprendre ce qu'un modèle peut voir et ce qu'il ne verra jamais.
+`;
+
+/* ================================================================
+   OUTILS DE BASE
+   ================================================================ */
+const SP = '▁';       // marqueur d'espace
+const SEP = '\u001F';      // séparateur interne de paire
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function disp(t){return esc(t).split(SP).join('<span class="sp">·</span>');}
+
+function preTok(text){
+  const t = text.replace(/\s+/g,' ').trim();
+  if(!t) return [];
+  return t.split(' ').filter(Boolean).map(function(w){return SP + w;});
+}
+function chars(w){ return Array.from(w); }
+
+function mergeSeq(sym,a,b){
+  const out=[]; let i=0;
+  while(i<sym.length){
+    if(i<sym.length-1 && sym[i]===a && sym[i+1]===b){ out.push(a+b); i+=2; }
+    else { out.push(sym[i]); i++; }
+  }
+  return out;
+}
+
+/* ---------------- BPE / WordPiece : entraînement ---------------- */
+function trainMerges(text, numMerges, mode){
+  const freq = new Map();
+  preTok(text).forEach(function(w){ freq.set(w,(freq.get(w)||0)+1); });
+  let seqs = Array.from(freq.entries()).map(function(e){return {sym:chars(e[0]), f:e[1]};});
+  const merges = [];
+  for(let it=0; it<numMerges; it++){
+    const pairs=new Map(), single=new Map();
+    for(const s of seqs){
+      for(let j=0;j<s.sym.length;j++){
+        single.set(s.sym[j],(single.get(s.sym[j])||0)+s.f);
+        if(j<s.sym.length-1){
+          const k=s.sym[j]+SEP+s.sym[j+1];
+          pairs.set(k,(pairs.get(k)||0)+s.f);
+        }
+      }
+    }
+    if(!pairs.size) break;
+    let best=null, bestScore=-Infinity, bestCount=0;
+    for(const kv of pairs){
+      const k=kv[0], c=kv[1];
+      if(mode==='wp' && c<3) continue;
+      const i=k.indexOf(SEP), a=k.slice(0,i), b=k.slice(i+1);
+      const score = (mode==='wp') ? c/(single.get(a)*single.get(b)) : c;
+      if(score>bestScore || (score===bestScore && c>bestCount)){ bestScore=score; best=[a,b]; bestCount=c; }
+    }
+    if(!best) break;
+    merges.push({a:best[0], b:best[1], count:bestCount});
+    for(const s of seqs) s.sym = mergeSeq(s.sym,best[0],best[1]);
+  }
+  return merges;
+}
+function ranksOf(merges,limit){
+  const r=new Map();
+  const n = (limit===undefined)?merges.length:Math.min(limit,merges.length);
+  for(let i=0;i<n;i++) r.set(merges[i].a+SEP+merges[i].b, i);
+  return r;
+}
+function bpeWord(word, ranks){
+  let sym = chars(word);
+  while(sym.length>1){
+    let bestRank=Infinity, bi=-1;
+    for(let i=0;i<sym.length-1;i++){
+      const r = ranks.get(sym[i]+SEP+sym[i+1]);
+      if(r!==undefined && r<bestRank){ bestRank=r; bi=i; }
+    }
+    if(bi<0) break;
+    sym = sym.slice(0,bi).concat([sym[bi]+sym[bi+1]], sym.slice(bi+2));
+  }
+  return sym;
+}
+function bpeEncode(text, ranks){
+  const out=[];
+  preTok(text).forEach(function(w){ bpeWord(w,ranks).forEach(function(t){out.push(t);}); });
+  return out;
+}
+
+/* ---------------- WordPiece : encodage glouton ---------------- */
+function wpEncode(text, vocab){
+  const out=[];
+  preTok(text).forEach(function(w){
+    const arr = chars(w.slice(1));
+    const pieces=[]; let start=0; let ok=true;
+    while(start<arr.length){
+      let end=arr.length, found=null;
+      while(start<end){
+        const sub=arr.slice(start,end).join('');
+        if(vocab.has(sub)){ found=sub; break; }
+        end--;
+      }
+      if(found===null){ ok=false; break; }
+      pieces.push(start===0?found:'##'+found);
+      start=end;
+    }
+    if(ok) pieces.forEach(function(p){out.push(p);}); else out.push('[UNK]');
+  });
+  return out;
+}
+function vocabFromMerges(text, merges){
+  const v=new Set();
+  preTok(text).forEach(function(w){ chars(w).forEach(function(c){v.add(c);}); });
+  merges.forEach(function(m){ v.add(m.a+m.b); });
+  return v;
+}
+
+/* ---------------- Unigram LM : entraînement + Viterbi ---------------- */
+function viterbi(word, lp){
+  const a=chars(word), n=a.length;
+  const best=new Array(n+1).fill(-Infinity), from=new Array(n+1).fill(-1);
+  best[0]=0;
+  for(let i=0;i<n;i++){
+    if(best[i]===-Infinity) continue;
+    const lim=Math.min(8,n-i);
+    for(let L=1;L<=lim;L++){
+      const s=a.slice(i,i+L).join('');
+      const p=lp.get(s);
+      if(p===undefined) continue;
+      if(best[i]+p > best[i+L]){ best[i+L]=best[i]+p; from[i+L]=i; }
+    }
+  }
+  if(best[n]===-Infinity) return a;
+  const out=[]; let i=n;
+  while(i>0){ const j=from[i]; out.unshift(a.slice(j,i).join('')); i=j; }
+  return out;
+}
+function trainUnigram(text, target){
+  const wf=new Map();
+  preTok(text).forEach(function(w){ wf.set(w,(wf.get(w)||0)+1); });
+  const cand=new Map(); const base=new Set();
+  const MAXL=8;
+  for(const kv of wf){
+    const a=chars(kv[0]), f=kv[1];
+    a.forEach(function(c){base.add(c);});
+    for(let i=0;i<a.length;i++)
+      for(let L=1;L<=MAXL && i+L<=a.length;L++){
+        const s=a.slice(i,i+L).join('');
+        cand.set(s,(cand.get(s)||0)+f);
+      }
+  }
+  const seed=Array.from(cand.entries())
+      .filter(function(e){return chars(e[0]).length>1;})
+      .sort(function(x,y){return (y[1]*(chars(y[0]).length-1))-(x[1]*(chars(x[0]).length-1));})
+      .slice(0, target*3);
+  let vocab=new Map();
+  base.forEach(function(c){ vocab.set(c, cand.get(c)||1); });
+  seed.forEach(function(e){ vocab.set(e[0],e[1]); });
+  const toLog = function(m){
+    let tot=0; m.forEach(function(v){tot+=v;});
+    const lp=new Map(); m.forEach(function(v,k){ lp.set(k, Math.log(v/tot)); }); return lp;
+  };
+  let lp=toLog(vocab);
+  for(let it=0; it<3; it++){
+    const counts=new Map();
+    for(const kv of wf){
+      viterbi(kv[0],lp).forEach(function(p){ counts.set(p,(counts.get(p)||0)+kv[1]); });
+    }
+    base.forEach(function(c){ if(!counts.has(c)) counts.set(c,0.1); });
+    const entries=Array.from(counts.entries())
+      .filter(function(e){return !base.has(e[0]);})
+      .sort(function(a,b){return b[1]-a[1];})
+      .slice(0, Math.max(0,target-base.size));
+    const nv=new Map();
+    base.forEach(function(c){ nv.set(c, counts.get(c)||0.1); });
+    entries.forEach(function(e){ nv.set(e[0],e[1]); });
+    vocab=nv; lp=toLog(vocab);
+  }
+  return lp;
+}
+function uniEncode(text, lp){
+  const out=[];
+  preTok(text).forEach(function(w){ viterbi(w,lp).forEach(function(t){out.push(t);}); });
+  return out;
+}
+
+/* ---------------- autres tokeniseurs ---------------- */
+function charEncode(text){
+  return Array.from(text.replace(/\s+/g,' ').trim()).map(function(c){return c===' '?SP:c;});
+}
+function wordEncode(text, wordVocab){
+  return preTok(text).map(function(w){
+    return wordVocab.has(w.slice(1).toLowerCase()) ? w : '<UNK>';
+  });
+}
+const TE=new TextEncoder();
+function byteEncode(text){
+  return Array.from(TE.encode(text)).map(function(b){return '0x'+b.toString(16).padStart(2,'0');});
+}
+
+/* ================================================================
+   ENTRAÎNEMENT AU CHARGEMENT
+   ================================================================ */
+const BPE_MERGES = trainMerges(CORPUS, 600, 'bpe');
+const BPE_RANKS  = ranksOf(BPE_MERGES);
+const WP_MERGES  = trainMerges(CORPUS, 500, 'wp');
+const WP_VOCAB   = vocabFromMerges(CORPUS, WP_MERGES);
+const UNI_LP     = trainUnigram(CORPUS, 1100);
+
+const WORD_LIST = (function(){
+  const f=new Map();
+  preTok(CORPUS).forEach(function(w){ const k=w.slice(1).toLowerCase(); f.set(k,(f.get(k)||0)+1); });
+  return Array.from(f.entries()).sort(function(a,b){return b[1]-a[1];})
+    .slice(0,400).map(function(e){return e[0];});
+})();
+const WORD_VOCAB = new Set(WORD_LIST);
+const WORD_IDS = (function(){
+  const m=new Map(); WORD_LIST.forEach(function(w,i){m.set(w,i+1);}); return m;
+})();
+
+const BPE_IDS = (function(){
+  const v=Array.from(vocabFromMerges(CORPUS,BPE_MERGES)).sort();
+  const m=new Map(); v.forEach(function(t,i){m.set(t,i);}); return m;
+})();
+
+function encodeWith(algo, text){
+  switch(algo){
+    case 'bpe':  return bpeEncode(text, BPE_RANKS);
+    case 'wp':   return wpEncode(text, WP_VOCAB);
+    case 'uni':  return uniEncode(text, UNI_LP);
+    case 'word': return wordEncode(text, WORD_VOCAB);
+    case 'char': return charEncode(text);
+    case 'byte': return byteEncode(text);
+  }
+  return [];
+}
+
+/* ================================================================
+   RENDU
+   ================================================================ */
+function renderToks(el, toks, idFn){
+  if(!el) return;
+  el.innerHTML = toks.map(function(t,i){
+    const id = idFn ? idFn(t,i) : null;
+    const title = (id===null||id===undefined) ? '' : ' title="id ' + id + '"';
+    return '<span class="tok c'+(i%8)+'"'+title+'>'+disp(t)+'</span>';
+  }).join('');
+}
+
+/* ================================================================
+   NAVIGATION
+   ================================================================ */
+const deck = document.getElementById('deck');
+const tpl  = document.getElementById('slides');
+deck.appendChild(tpl.content.cloneNode(true));
+const slides = Array.prototype.slice.call(deck.querySelectorAll('.slide'));
+const N = slides.length;
+let cur = 0;
+const SECURITY_FROM = 17;
+
+const dotsEl = document.getElementById('dots');
+slides.forEach(function(s,i){
+  const b=document.createElement('button');
+  b.className='dot'+((i>=SECURITY_FROM && i<N-1)?' sec':'');
+  b.onclick=function(){go(i);};
+  dotsEl.appendChild(b);
+});
+const dots=Array.prototype.slice.call(dotsEl.children);
+
+function go(i){
+  if(i<0||i>=N) return;
+  slides[cur].classList.remove('on');
+  cur=i;
+  slides[cur].classList.add('on');
+  slides[cur].scrollTop=0;
+  dots.forEach(function(d,k){ d.classList.toggle('on',k===cur); });
+  document.getElementById('prog').style.width=((cur+1)/N*100)+'%';
+  document.getElementById('counter').textContent=(cur+1)+' / '+N;
+  document.getElementById('prev').disabled = (cur===0);
+  document.getElementById('next').disabled = (cur===N-1);
+}
+document.getElementById('prev').onclick=function(){go(cur-1);};
+document.getElementById('next').onclick=function(){go(cur+1);};
+document.addEventListener('keydown',function(e){
+  const t=e.target.tagName;
+  if(t==='TEXTAREA'||t==='INPUT'||t==='SELECT') return;
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(cur+1);}
+  if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(cur-1);}
+  if(e.key==='Home')go(0);
+  if(e.key==='End')go(N-1);
+});
+document.getElementById('themebtn').onclick=function(){
+  const h=document.documentElement;
+  h.dataset.theme = (h.dataset.theme==='light') ? 'dark' : 'light';
+};
+
+/* --- sommaire --- */
+const TOC=[
+  [3,'Acte I — Le problème','Qu’est-ce qu’un token, et pourquoi tout en découle'],
+  [5,'Acte II — Les huit algorithmes','Des mots aux octets : mécanismes, forces, faiblesses'],
+  [12,'Interlude — Comparateur','Six tokeniseurs confrontés à la même phrase'],
+  [13,'Acte III — L’après-token','Byte-level, patches dynamiques, superwords'],
+  [17,'Acte IV — Sécurité','Cinq familles d’attaques et neuf mesures de durcissement'],
+  [23,'Acte V — Conclusion','Ce que découper veut dire, et ce qui reste ouvert']
+];
+const tocEl=document.getElementById('toc');
+TOC.forEach(function(t,i){
+  const b=document.createElement('button');
+  b.className='toc-item';
+  b.innerHTML='<span class="toc-n">'+(i+1)+'</span><span><span class="toc-t">'+t[1]+'</span><br><span class="toc-d">'+t[2]+'</span></span>';
+  b.onclick=function(){go(t[0]);};
+  tocEl.appendChild(b);
+});
+
+/* ================================================================
+   DÉMO 1 — visualiseur
+   ================================================================ */
+(function(){
+  const inp=document.getElementById('d1-in'), sel=document.getElementById('d1-algo');
+  const out=document.getElementById('d1-out'), ids=document.getElementById('d1-ids'), cnt=document.getElementById('d1-count');
+  function idFor(algo,t,i){
+    if(algo==='byte') return parseInt(t,16);
+    if(algo==='bpe')  return BPE_IDS.has(t)?BPE_IDS.get(t):'?';
+    if(algo==='word') return (t==='<UNK>')?0:(WORD_IDS.get(t.slice(1).toLowerCase())||0);
+    return null;
+  }
+  function upd(){
+    const algo=sel.value, toks=encodeWith(algo,inp.value);
+    renderToks(out,toks,function(t,i){return idFor(algo,t,i);});
+    cnt.textContent=toks.length+' tokens';
+    ids.textContent='['+toks.map(function(t,i){
+      const v=idFor(algo,t,i); return (v===null)?'·':v;
+    }).join(', ')+']';
+  }
+  inp.oninput=upd; sel.onchange=upd; upd();
+})();
+
+/* ================================================================
+   DÉMO 2 — curseur de granularité
+   ================================================================ */
+(function(){
+  const TEST='La tokenisation détermine la longueur des séquences, le coût du calcul et la robustesse du système face aux attaques.';
+  const range=document.getElementById('d2-range'), out=document.getElementById('d2-out');
+  const lab=document.getElementById('d2-lab');
+  const baseChars=new Set();
+  preTok(CORPUS).forEach(function(w){ chars(w).forEach(function(c){baseChars.add(c);}); });
+  const nWords=preTok(TEST).length;
+  const pts=[];
+  for(let m=0;m<=600;m+=25){
+    const r=ranksOf(BPE_MERGES,m);
+    pts.push({m:m, tok:bpeEncode(TEST,r).length, voc:baseChars.size+m});
+  }
+  const W=900,H=150,PL=58,PR=16,PT=14,PB=26;
+  const maxT=Math.max.apply(null,pts.map(function(p){return p.tok;}));
+  const minT=Math.min.apply(null,pts.map(function(p){return p.tok;}));
+  function X(m){return PL+(m/600)*(W-PL-PR);}
+  function Y(t){return PT+(1-(t-minT)/((maxT-minT)||1))*(H-PT-PB);}
+  function chart(sel){
+    const path=pts.map(function(p,i){return (i?'L':'M')+X(p.m).toFixed(1)+' '+Y(p.tok).toFixed(1);}).join(' ');
+    let g='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">';
+    g+='<defs><linearGradient id="gr" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="var(--acc)"/><stop offset="1" stop-color="var(--acc2)"/></linearGradient></defs>';
+    g+='<line x1="'+PL+'" y1="'+(H-PB)+'" x2="'+(W-PR)+'" y2="'+(H-PB)+'" stroke="var(--line2)"/>';
+    g+='<line x1="'+PL+'" y1="'+PT+'" x2="'+PL+'" y2="'+(H-PB)+'" stroke="var(--line2)"/>';
+    g+='<path d="'+path+'" fill="none" stroke="url(#gr)" stroke-width="2.5"/>';
+    let p=pts[0];
+    pts.forEach(function(q){ if(q.m===sel) p=q; });
+    g+='<circle cx="'+X(p.m)+'" cy="'+Y(p.tok)+'" r="5" fill="var(--acc2)" stroke="var(--bg)" stroke-width="2"/>';
+    g+='<text x="'+PL+'" y="'+(H-8)+'">0 fusion</text>';
+    g+='<text x="'+(W-PR)+'" y="'+(H-8)+'" text-anchor="end">600 fusions</text>';
+    g+='<text x="4" y="'+(PT+9)+'">'+maxT+' tokens</text>';
+    g+='<text x="4" y="'+(H-PB)+'">'+minT+' tokens</text>';
+    g+='</svg>';
+    return g;
+  }
+  function upd(){
+    const m=+range.value, r=ranksOf(BPE_MERGES,m);
+    const toks=bpeEncode(TEST,r);
+    renderToks(out,toks);
+    document.getElementById('d2-chart').innerHTML=chart(m);
+    document.getElementById('d2-tok').textContent=toks.length;
+    document.getElementById('d2-voc').textContent=baseChars.size+m;
+    document.getElementById('d2-fert').textContent=(toks.length/nWords).toFixed(2);
+    lab.textContent='vocabulaire : '+(baseChars.size+m);
+  }
+  range.oninput=upd; upd();
+})();
+
+/* ================================================================
+   DÉMO 3 — entraînement BPE pas à pas
+   ================================================================ */
+(function(){
+  function fresh(){
+    const f=new Map();
+    preTok(CORPUS).forEach(function(w){ f.set(w,(f.get(w)||0)+1); });
+    return {seqs:Array.from(f.entries()).map(function(e){return {sym:chars(e[0]),f:e[1]};}), merges:[]};
+  }
+  let st=fresh();
+  let base=0; st.seqs.forEach(function(s){base+=s.sym.length*s.f;});
+  const log=document.getElementById('d3-log'), nEl=document.getElementById('d3-n');
+  const wordIn=document.getElementById('d3-word'), wordOut=document.getElementById('d3-word-out');
+  const bar=document.getElementById('d3-bar'), stats=document.getElementById('d3-stats');
+  function step(){
+    const pairs=new Map();
+    st.seqs.forEach(function(s){
+      for(let j=0;j<s.sym.length-1;j++){
+        const k=s.sym[j]+SEP+s.sym[j+1]; pairs.set(k,(pairs.get(k)||0)+s.f);
+      }
+    });
+    if(!pairs.size) return false;
+    let bk=null,bc=-1;
+    pairs.forEach(function(c,k){ if(c>bc){bc=c;bk=k;} });
+    const i=bk.indexOf(SEP), a=bk.slice(0,i), b=bk.slice(i+1);
+    st.merges.push({a:a,b:b,count:bc});
+    st.seqs.forEach(function(s){ s.sym=mergeSeq(s.sym,a,b); });
+    const d=document.createElement('div');
+    d.className='mergestep';
+    d.innerHTML='<span style="color:var(--tx3)">#'+st.merges.length+'</span>'
+      +'<span class="chip">'+disp(a)+'</span><span style="color:var(--tx3)">+</span>'
+      +'<span class="chip">'+disp(b)+'</span><span style="color:var(--acc)">→</span>'
+      +'<span class="chip" style="border-color:var(--acc)">'+disp(a+b)+'</span>'
+      +'<span style="margin-left:auto;color:var(--tx3)">'+bc+'×</span>';
+    log.insertBefore(d,log.firstChild);
+    return true;
+  }
+  function refresh(){
+    let tot=0; st.seqs.forEach(function(s){tot+=s.sym.length*s.f;});
+    nEl.textContent=st.merges.length+' fusion'+(st.merges.length>1?'s':'');
+    bar.style.width=(tot/base*100)+'%';
+    stats.textContent=tot.toLocaleString('fr-FR')+' symboles / '+base.toLocaleString('fr-FR')
+      +'  ('+(100-tot/base*100).toFixed(1)+' % de réduction)';
+    renderToks(wordOut, bpeWord(SP+(wordIn.value||'test'), ranksOf(st.merges)));
+  }
+  document.getElementById('d3-step').onclick=function(){step();refresh();};
+  document.getElementById('d3-run10').onclick=function(){for(let i=0;i<10;i++){if(!step())break;} refresh();};
+  document.getElementById('d3-reset').onclick=function(){st=fresh();log.innerHTML='';refresh();};
+  wordIn.oninput=refresh;
+  refresh();
+})();
+
+/* ================================================================
+   DÉMO 4 — coût en octets
+   ================================================================ */
+(function(){
+  const inp=document.getElementById('d4-in'), out=document.getElementById('d4-out'), note=document.getElementById('d4-note');
+  function upd(){
+    const s=inp.value;
+    const arr=Array.from(s);
+    out.innerHTML=arr.map(function(ch,i){
+      const n=TE.encode(ch).length;
+      return '<span class="tok c'+(i%8)+'" title="'+n+' octet(s)">'+disp(ch===' '?SP:ch)
+        +'<span style="opacity:.55;font-size:.78em"> '+n+'o</span></span>';
+    }).join('');
+    const bytes=TE.encode(s).length;
+    note.textContent=arr.length+' caractères → '+bytes+' octets ('
+      +(bytes/Math.max(1,arr.length)).toFixed(2)+' octet par caractère). '
+      +'Un tokeniseur au niveau des octets travaille sur cette seconde longueur, pas sur la première.';
+  }
+  inp.oninput=upd; upd();
+})();
+
+/* ================================================================
+   DÉMO 5 — comparateur
+   ================================================================ */
+(function(){
+  const inp=document.getElementById('d5-in'), out=document.getElementById('d5-out');
+  const ALGOS=[['bpe','BPE'],['wp','WordPiece'],['uni','Unigram / Viterbi'],['word','Mots'],['char','Caractères'],['byte','Octets UTF-8']];
+  function upd(){
+    const txt=inp.value;
+    out.innerHTML='';
+    const counts=ALGOS.map(function(a){return encodeWith(a[0],txt).length;});
+    const mx=Math.max.apply(null,counts.concat([1]));
+    ALGOS.forEach(function(a){
+      const toks=encodeWith(a[0],txt);
+      const d=document.createElement('div');
+      d.innerHTML='<div class="row" style="justify-content:space-between;margin-bottom:6px">'
+        +'<h4 style="margin:0">'+a[1]+'</h4><span class="tag">'+toks.length+' tokens</span></div>'
+        +'<div class="bar" style="margin-bottom:8px"><i style="width:'+(toks.length/mx*100)+'%"></i></div>'
+        +'<div class="tokline" style="font-size:13px">'
+        +toks.slice(0,140).map(function(t,i){return '<span class="tok c'+(i%8)+'">'+disp(t)+'</span>';}).join('')
+        +(toks.length>140?'<span class="tag">+'+(toks.length-140)+'</span>':'')+'</div>';
+      out.appendChild(d);
+    });
+  }
+  inp.oninput=upd;
+  Array.prototype.slice.call(document.querySelectorAll('[data-d5]')).forEach(function(b){
+    b.onclick=function(){
+      Array.prototype.slice.call(document.querySelectorAll('[data-d5]')).forEach(function(x){x.classList.remove('on');});
+      b.classList.add('on'); inp.value=b.dataset.d5; upd();
+    };
+  });
+  upd();
+})();
+
+/* ================================================================
+   DÉMO 6 — coût par langue
+   ================================================================ */
+(function(){
+  const out=document.getElementById('d6-out');
+  const S=[
+    ['Français','Les modèles de langage découpent le texte avant de le comprendre.'],
+    ['Anglais','Language models split text into pieces before understanding it.'],
+    ['Allemand','Sprachmodelle zerlegen den Text, bevor sie ihn verstehen können.'],
+    ['Turc','Dil modelleri metni anlamadan önce parçalara ayırır.'],
+    ['Russe','Языковые модели разбивают текст перед тем, как понять его.'],
+    ['Japonais','言語モデルはテキストを理解する前に分割します。'],
+    ['Arabe','تقوم نماذج اللغة بتقسيم النص قبل فهمه.']
+  ];
+  const rows=S.map(function(s){
+    return {n:s[0], t:s[1], tok:bpeEncode(s[1],BPE_RANKS).length, ch:Array.from(s[1]).length};
+  });
+  const ref=rows[0].tok/rows[0].ch;
+  const mx=Math.max.apply(null,rows.map(function(r){return r.tok/r.ch;}));
+  out.innerHTML=rows.map(function(r){
+    const ratio=r.tok/r.ch;
+    return '<div><div class="row" style="justify-content:space-between;margin-bottom:5px">'
+      +'<span style="font-weight:650">'+r.n+'</span>'
+      +'<span class="tag">'+r.tok+' tokens · '+ratio.toFixed(2)+' tok/car · ×'+(ratio/ref).toFixed(1)+' vs FR</span></div>'
+      +'<div class="bar"><i style="width:'+(ratio/mx*100)+'%"></i></div>'
+      +'<div class="hint" style="margin-top:4px">'+esc(r.t)+'</div></div>';
+  }).join('');
+})();
+
+/* ================================================================
+   DÉMO 7 — homoglyphes
+   ================================================================ */
+(function(){
+  const MAP={a:'а',e:'е',o:'о',c:'с',p:'р',i:'і',s:'ѕ',x:'х',y:'у'};
+  const inp=document.getElementById('d7-in');
+  const A=document.getElementById('d7-a'), B=document.getElementById('d7-b');
+  const AN=document.getElementById('d7-an'), BN=document.getElementById('d7-bn');
+  let sub=false;
+  function conv(s){ return Array.from(s).map(function(c){return MAP[c]||c;}).join(''); }
+  function upd(){
+    const a=inp.value, b=sub?conv(a):a;
+    const ta=byteEncode(a), tb=byteEncode(b);
+    document.getElementById('d7-at').textContent=a;
+    document.getElementById('d7-bt').textContent=b;
+    renderToks(A,ta); renderToks(B,tb);
+    AN.textContent=ta.length+' octets · '+bpeEncode(a,BPE_RANKS).length+' tokens BPE';
+    BN.textContent=tb.length+' octets · '+bpeEncode(b,BPE_RANKS).length+' tokens BPE'
+      + (sub?'  ⚠ chaîne différente, rendu identique':'');
+  }
+  document.getElementById('d7-go').onclick=function(){sub=true;upd();};
+  document.getElementById('d7-reset').onclick=function(){sub=false;upd();};
+  inp.oninput=function(){sub=false;upd();};
+  upd();
+})();
+
+/* ================================================================
+   DÉMO 8 — TokenBreak
+   ================================================================ */
+(function(){
+  const inp=document.getElementById('d8-in');
+  const A=document.getElementById('d8-a'), B=document.getElementById('d8-b');
+  function upd(){
+    const w=inp.value.trim()||'instructions';
+    renderToks(A, wpEncode(w, WP_VOCAB));
+    renderToks(B, wpEncode('f'+w, WP_VOCAB));
+  }
+  inp.oninput=upd; upd();
+})();
+
+go(0);
+var bs=document.getElementById('bootscreen'); if(bs) bs.remove();
+}
+setTimeout(__boot,50);
+</script>
+<script>(function(){function calcH(){return Math.min(820,Math.max(600,Math.round(innerWidth*0.75)));}function postH(){try{parent.postMessage({wtWidget:1,h:calcH()},"*");}catch(e){}}addEventListener("load",postH);addEventListener("resize",postH);postH();})();</script>
+</body>
+</html>
