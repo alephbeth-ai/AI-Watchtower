@@ -21,7 +21,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onSelect }) => {
           </span>
           {post.featured && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60">
-              Interactive / Featured
+              {post.lang === 'en' ? 'Interactive / Featured' : 'Interactif / À la une'}
             </span>
           )}
         </div>
@@ -69,7 +69,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onSelect }) => {
           </div>
 
           <span className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium group-hover:translate-x-1 transition-transform">
-            Read <ArrowRight className="w-3.5 h-3.5" />
+            {post.lang === 'en' ? 'Read' : 'Lire'} <ArrowRight className="w-3.5 h-3.5" />
           </span>
         </div>
       </div>

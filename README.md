@@ -9,8 +9,8 @@ Beyond the articles, the site ships **interactive teaching widgets** — step-by
 ## What the site offers
 
 - **Articles** — security research posts, filterable by category (Fundamentals, Explainer, Analysis, Hardening, Strategy) with full-text search across titles, summaries, and tags.
-- **Interactive** — a lab of standalone HTML widgets browsable from their own tab, in three sections: *Model Architectures* (step-by-step LSTM / CNN / Transformer walkthroughs), *Tokens & Security* (a 24-screen tokenization deep dive with tokenizers trained live in the browser and five families of tokenizer-level attacks), and *Practical Hardening & Agentic Security Research* (a lethal-trifecta blast-radius simulator, an OWASP ASI Top 10 explorer, and a scored hardening checklist).
-- **Bilingual** — every article exists in an English and a French version, linked by a shared `translationKey`; the language switcher toggles the whole site.
+- **Interactive** — a lab of standalone HTML widgets browsable from their own tab, in three sections: *Model Architectures* (step-by-step LSTM / CNN / Transformer walkthroughs), *Tokens & Security* (a 24-screen tokenization deep dive with tokenizers trained live in the browser and five families of tokenizer-level attacks), and *Practical Hardening & Agentic Security Research* (a lethal-trifecta blast-radius simulator, an OWASP ASI Top 10 explorer, and a scored hardening checklist). Every one of these tools is also surfaced on the homepage hero, one click away from the lab.
+- **Bilingual** — every article exists in an English and a French version, linked by a shared `translationKey`; the language switcher toggles the whole site and keeps the reader on the same article. In dev, a console warning flags any article that lost its counterpart.
 - **Dark / light mode** — follows the system preference by default, with a manual toggle.
 
 ## Tech stack
@@ -24,8 +24,9 @@ The site is a single-page application built with **React 18 + TypeScript + Vite 
 ├── index.html                      # SPA entry point
 ├── vite.config.ts                  # Vite config (publicDir: static, relative base)
 ├── src/
-│   ├── App.tsx                     # Tabs (articles / interactive / contact), search, filters
+│   ├── App.tsx                     # Tabs (articles / interactive / contact), hero, search, filters
 │   ├── data/posts.ts               # Loads + parses all Markdown posts (frontmatter, reading time)
+│   ├── data/widgets.ts             # Interactive tool catalog shared by the hero and the lab
 │   ├── components/                 # Header, PostCard, PostView, WidgetEmbed, showcase, etc.
 │   └── types.ts
 ├── content/
@@ -75,6 +76,13 @@ Frontmatter conventions the site relies on:
 - **`date`** / **`draft`** — posts with `draft: true` are excluded.
 
 Reading time is computed automatically (~200 words/minute).
+
+## Add a new interactive widget
+
+1. Drop the two standalone HTML files in `static/widgets/` — `my-widget-en.html` and `my-widget-fr.html`.
+2. Add one entry to the array in [src/data/widgets.ts](src/data/widgets.ts). That file is the single source of truth: the entry shows up both in the Interactive tab (grouped under its `category`) and in the homepage hero grid.
+
+Every user-facing string in the entry — `title`, `shortTitle`, `description`, `badge`, `hint` — has an English and a French form. Widgets whose layout is a fixed viewport (slide decks, dashboards) set `variant: 'app'` to get the framed window with fullscreen and open-in-new-tab controls.
 
 ## Deployment
 

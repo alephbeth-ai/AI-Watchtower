@@ -85,6 +85,7 @@ for (const [path, raw] of Object.entries(rawPosts)) {
     content,
     readingTime: calculateReadingTime(content),
     featured: slug.includes('how-llms-work') || slug.includes('comprendre-llm') || slug.includes('claude-desktop'),
+    translationKey: typeof metadata.translationKey === 'string' ? metadata.translationKey : undefined,
   });
 }
 
@@ -99,4 +100,35 @@ export function getPostsByLang(lang: Language): Post[] {
 
 export function getPostBySlug(slug: string, lang: Language): Post | undefined {
   return allPosts.find((p) => p.slug === slug && p.lang === lang) || allPosts.find((p) => p.slug === slug);
+}
+
+/**
+ * Resolve the counterpart of a post in another language. FR and EN files have
+ * different slugs, so the pairing goes through the shared `translationKey`
+ * frontmatter field. Returns undefined when no translation exists.
+ */
+export function getTranslation(post: Post, lang: Language): Post | undefined {
+  if (post.lang === lang) return post;
+  if (!post.translationKey) return undefined;
+
+  return allPosts.find((p) => p.lang === lang && p.translationKey === post.translationKey);
+}
+
+/** Posts that exist in only one language — every article is meant to ship FR + EN. */
+export function getUntranslatedPosts(): Post[] {
+  return allPosts.filter((post) => {
+    const counterpart: Language = post.lang === 'en' ? 'fr' : 'en';
+    return !getTranslation(post, counterpart);
+  });
+}
+
+// Bilingual coverage guard: warn while developing if a post lost its pair.
+if (import.meta.env.DEV) {
+  const orphans = getUntranslatedPosts();
+  if (orphans.length > 0) {
+    console.warn(
+      '[posts] Articles missing a translation (check `translationKey` in the frontmatter):',
+      orphans.map((p) => `${p.lang}/${p.slug}`)
+    );
+  }
 }

@@ -1,133 +1,47 @@
-import React, { useState } from 'react';
-import { Cpu, Sparkles, Layers, Activity, HelpCircle, Binary, ShieldAlert, ShieldCheck } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Cpu, Sparkles, HelpCircle } from 'lucide-react';
 import { Language } from '../types';
 import { WidgetEmbed } from './WidgetEmbed';
+import { DEFAULT_WIDGET_ID, getWidgetCategories, getWidgets } from '../data/widgets';
 
 interface InteractiveShowcaseProps {
   lang: Language;
+  /** Widget to open on mount — set when arriving from the homepage hero. */
+  initialWidgetId?: string;
+  /** True when the reader picked a specific tool, so scroll it into view. */
+  focusWidget?: boolean;
+  /** Reports the active widget back so the selection survives a tab round-trip. */
+  onWidgetChange?: (widgetId: string) => void;
 }
 
-interface WidgetDef {
-  id: string;
-  category: 'architectures' | 'security' | 'hardening';
-  title: string;
-  paper: string;
-  src: string;
-  description: string;
-  badge: string;
-  icon: React.ComponentType<{ className?: string }>;
-  /** Fixed-viewport widgets (slide decks) get their own framed window. */
-  variant?: 'flow' | 'app';
-  hint?: string;
-}
+export const InteractiveShowcase: React.FC<InteractiveShowcaseProps> = ({
+  lang,
+  initialWidgetId,
+  focusWidget = false,
+  onWidgetChange,
+}) => {
+  const [selectedWidget, setSelectedWidget] = useState<string>(
+    initialWidgetId || DEFAULT_WIDGET_ID
+  );
+  const embedRef = useRef<HTMLDivElement>(null);
 
-export const InteractiveShowcase: React.FC<InteractiveShowcaseProps> = ({ lang }) => {
-  const [selectedWidget, setSelectedWidget] = useState<string>('transformer');
+  const widgets = getWidgets(lang);
+  const categories = getWidgetCategories(lang);
 
-  const widgets: WidgetDef[] = [
-    {
-      id: 'transformer',
-      category: 'architectures',
-      title: lang === 'en' ? 'The Transformer (Self-Attention)' : 'Le Transformer (Auto-Attention)',
-      paper: 'Vaswani et al., 2017 — "Attention Is All You Need"',
-      src: lang === 'en' ? '/widgets/transformer-en.html' : '/widgets/transformer-fr.html',
-      description:
-        lang === 'en'
-          ? 'Step through Query, Key, Value projections, attention weights, residual connections, and token prediction. Every word looks directly at every other word in parallel.'
-          : 'Suivez étape par étape les projections Requête/Clé/Valeur, les poids d\'attention, les connexions résiduelles et la prédiction. Chaque mot interagit directement avec tous les autres.',
-      badge: 'Modern LLM Standard',
-      icon: Sparkles,
-    },
-    {
-      id: 'lstm',
-      category: 'architectures',
-      title: lang === 'en' ? 'The LSTM (Gated Recurrent Network)' : 'Le LSTM (Réseau Récurrent à Portes)',
-      paper: 'Hochreiter & Schmidhuber, 1997',
-      src: lang === 'en' ? '/widgets/lstm-en.html' : '/widgets/lstm-fr.html',
-      description:
-        lang === 'en'
-          ? 'Step through Forget, Input, and Output gates regulating the memory conveyor belt cell state C across time steps.'
-          : 'Explorez les portes d\'oubli, d\'entrée et de sortie régulant le tapis roulant de mémoire (état de cellule C) au fil des mots.',
-      badge: 'Sequential Recurrence',
-      icon: Activity,
-    },
-    {
-      id: 'cnn',
-      category: 'architectures',
-      title: lang === 'en' ? 'The 1D CNN (Sliding Convolutions)' : 'Le CNN 1D (Fenêtre Convolutive Glissante)',
-      paper: 'Kim, 2014 / WaveNet, 2016',
-      src: lang === 'en' ? '/widgets/cnn-en.html' : '/widgets/cnn-fr.html',
-      description:
-        lang === 'en'
-          ? 'Slide a kernel filter across neighboring tokens to extract local receptive field features in full parallel.'
-          : 'Faites glisser un filtre convolutif sur les jetons voisins pour extraire des motifs locaux en parallèle.',
-      badge: 'Parallel Local Filter',
-      icon: Layers,
-    },
-    {
-      id: 'tokens',
-      category: 'security',
-      title:
-        lang === 'en'
-          ? 'Tokens & Tokenization: the Hidden Attack Surface'
-          : 'Les Tokens : la matière première invisible des LLM',
-      paper: 'Sennrich et al. (BPE) · Kudo (Unigram) · "Fishing for Magikarp" · TokenBreak (2025)',
-      src: lang === 'en' ? '/widgets/tokens-en.html' : '/widgets/tokens-fr.html',
-      description:
-        lang === 'en'
-          ? '24-screen interactive deck: BPE, WordPiece and Unigram tokenizers trained live in your browser, plus five families of tokenizer-level attacks — glitch tokens, homoglyphs, TokenBreak, token smuggling, token bombs — and nine hardening measures.'
-          : 'Présentation interactive en 24 écrans : tokeniseurs BPE, WordPiece et Unigram entraînés en direct dans votre navigateur, puis cinq familles d\'attaques au niveau du tokeniseur — glitch tokens, homoglyphes, TokenBreak, contrebande et bombes de tokens — et neuf mesures de durcissement.',
-      badge: 'Security Deep Dive',
-      icon: Binary,
-      variant: 'app',
-      hint:
-        lang === 'en'
-          ? 'Use ← → or the dots to navigate · fullscreen available'
-          : 'Naviguez avec ← → ou les points · plein écran disponible',
-    },
-    {
-      id: 'hardening',
-      category: 'hardening',
-      title:
-        lang === 'en'
-          ? 'Agentic Hardening Lab: Trifecta, ASI Top 10, Checklist'
-          : 'Labo de durcissement agentique : trifecta, ASI Top 10, checklist',
-      paper: 'OWASP Agentic Security Initiative — ASI Top 10 (2026) · MAESTRO',
-      src: lang === 'en' ? '/widgets/hardening-en.html' : '/widgets/hardening-fr.html',
-      description:
-        lang === 'en'
-          ? 'Three working tools: tick the capabilities you actually grant an agent and watch the lethal trifecta close, explore the OWASP ASI Top 10 with its mapped countermeasures, and run the hardening checklist — thirty minutes on a workstation, then the deployment posture — with your progress saved locally.'
-          : 'Trois outils : cochez les capacités réellement accordées à un agent et voyez la trifecta létale se refermer, explorez l\'OWASP ASI Top 10 et ses contre-mesures, puis déroulez la checklist de durcissement — trente minutes sur un poste, puis la posture de déploiement — avec progression sauvegardée localement.',
-      badge: 'Applied Defense',
-      icon: ShieldCheck,
-      variant: 'app',
-      hint:
-        lang === 'en'
-          ? 'Switch tools with the tabs · fullscreen available'
-          : 'Changez d\'outil avec les onglets · plein écran disponible',
-    },
-  ];
+  // Deep link from the homepage hero: select the requested tool and scroll to it.
+  // Entering the tab from the nav bar leaves the reader at the top of the lab.
+  useEffect(() => {
+    if (!initialWidgetId) return;
+    setSelectedWidget(initialWidgetId);
+    if (focusWidget) {
+      embedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [initialWidgetId, focusWidget]);
 
-  const categories: { key: WidgetDef['category']; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    {
-      key: 'architectures',
-      label: lang === 'en' ? 'Model Architectures' : 'Architectures des modèles',
-      icon: Cpu,
-    },
-    {
-      key: 'security',
-      label: lang === 'en' ? 'Tokens & Security' : 'Tokens & Sécurité',
-      icon: ShieldAlert,
-    },
-    {
-      key: 'hardening',
-      label:
-        lang === 'en'
-          ? 'Practical Hardening & Agentic Security Research'
-          : 'Durcissement pratique & recherche en sécurité agentique',
-      icon: ShieldCheck,
-    },
-  ];
+  const selectWidget = (widgetId: string) => {
+    setSelectedWidget(widgetId);
+    onWidgetChange?.(widgetId);
+  };
 
   const current = widgets.find((w) => w.id === selectedWidget) || widgets[0];
 
@@ -174,7 +88,7 @@ export const InteractiveShowcase: React.FC<InteractiveShowcaseProps> = ({ lang }
                 return (
                   <button
                     key={w.id}
-                    onClick={() => setSelectedWidget(w.id)}
+                    onClick={() => selectWidget(w.id)}
                     className={`p-4 rounded-2xl border text-left transition-all ${
                       isSelected
                         ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-500 dark:border-blue-500 shadow-sm'
@@ -214,7 +128,10 @@ export const InteractiveShowcase: React.FC<InteractiveShowcaseProps> = ({ lang }
       })}
 
       {/* Embedded Active Widget */}
-      <div className="bg-white dark:bg-[#1a1a18] rounded-2xl p-6 border border-black/10 dark:border-white/10 shadow-sm">
+      <div
+        ref={embedRef}
+        className="bg-white dark:bg-[#1a1a18] rounded-2xl p-6 border border-black/10 dark:border-white/10 shadow-sm scroll-mt-20"
+      >
         <div className="mb-4 pb-4 border-b border-black/5 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h2 className="text-lg font-bold text-[#1a1a18] dark:text-[#ededeb]">

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { Post, Language } from '../types';
 import { PostContent } from './PostContent';
-import { getPostBySlug } from '../data/posts';
+import { getTranslation } from '../data/posts';
 
 interface PostViewProps {
   post: Post;
@@ -59,9 +59,9 @@ export const PostView: React.FC<PostViewProps> = ({
     setHeadings(extracted);
   }, [post.content]);
 
-  // Find translated equivalent
+  // Find the counterpart of this article in the other language (paired by translationKey)
   const counterpartLang: Language = lang === 'en' ? 'fr' : 'en';
-  const translatedPost = getPostBySlug(post.slug, counterpartLang);
+  const translatedPost = getTranslation(post, counterpartLang);
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -91,7 +91,7 @@ export const PostView: React.FC<PostViewProps> = ({
           </button>
 
           <div className="flex items-center gap-2">
-            {translatedPost && (
+            {translatedPost ? (
               <button
                 onClick={() => {
                   onLanguageChange(counterpartLang);
@@ -102,6 +102,14 @@ export const PostView: React.FC<PostViewProps> = ({
                 <Globe className="w-3.5 h-3.5" />
                 <span>{lang === 'en' ? 'Read in French' : 'Lire en anglais'}</span>
               </button>
+            ) : (
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#6b6b66] dark:text-[#a3a39d] bg-[#f5f5f3] dark:bg-[#1f1f1d] border border-black/10 dark:border-white/10 rounded-xl"
+                title={lang === 'en' ? 'No French version yet' : 'Pas encore de version anglaise'}
+              >
+                <Globe className="w-3.5 h-3.5 opacity-60" />
+                <span>{lang === 'en' ? 'English only' : 'Français uniquement'}</span>
+              </span>
             )}
 
             <button
@@ -127,7 +135,7 @@ export const PostView: React.FC<PostViewProps> = ({
             {post.readingTime && (
               <span className="flex items-center gap-1 text-xs text-[#6b6b66] dark:text-[#a3a39d]">
                 <Clock className="w-3.5 h-3.5" />
-                {post.readingTime} min read
+                {post.readingTime} {lang === 'en' ? 'min read' : 'min de lecture'}
               </span>
             )}
           </div>

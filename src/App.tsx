@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Language, Post } from './types';
-import { getPostsByLang } from './data/posts';
+import { getPostsByLang, getTranslation } from './data/posts';
+import { DEFAULT_WIDGET_ID, getWidgets } from './data/widgets';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { PostCard } from './components/PostCard';
 import { PostView } from './components/PostView';
 import { InteractiveShowcase } from './components/InteractiveShowcase';
 import { ContactView } from './components/ContactView';
-import { Shield, Sparkles, Filter, Search, ArrowRight } from 'lucide-react';
+import { Shield, Sparkles, Filter, Search, ArrowRight, Cpu } from 'lucide-react';
 
 export function App() {
   const [lang, setLang] = useState<Language>('en');
@@ -18,6 +19,8 @@ export function App() {
   const [activeTab, setActiveTab] = useState<'articles' | 'interactive' | 'contact'>('articles');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [activeWidgetId, setActiveWidgetId] = useState<string>(DEFAULT_WIDGET_ID);
+  const [widgetPickedFromHero, setWidgetPickedFromHero] = useState<boolean>(false);
 
   // Sync dark class on html root
   useEffect(() => {
@@ -52,14 +55,25 @@ export function App() {
   const handleLanguageChange = (newLang: Language) => {
     setLang(newLang);
     if (selectedPost) {
-      // Clear selected post or update if translated exists
-      setSelectedPost(null);
+      // Stay on the same article in the other language; fall back to the list
+      // when that article has no counterpart.
+      setSelectedPost(getTranslation(selectedPost, newLang) || null);
     }
   };
 
   const featuredPost = posts.find(
     (p) => p.slug.includes('how-llms-work') || p.slug.includes('comprendre-llm')
   ) || posts[0];
+
+  const widgets = getWidgets(lang);
+
+  const openWidget = (widgetId: string) => {
+    setActiveWidgetId(widgetId);
+    setWidgetPickedFromHero(true);
+    setSelectedPost(null);
+    setActiveTab('interactive');
+    window.scrollTo({ top: 0 });
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fcfbf9] dark:bg-[#121211] text-[#1a1a18] dark:text-[#ededeb] transition-colors font-sans">
@@ -74,6 +88,7 @@ export function App() {
         onTabChange={(tab) => {
           setActiveTab(tab);
           setSelectedPost(null);
+          setWidgetPickedFromHero(false);
         }}
       />
 
@@ -87,7 +102,12 @@ export function App() {
             onLanguageChange={handleLanguageChange}
           />
         ) : activeTab === 'interactive' ? (
-          <InteractiveShowcase lang={lang} />
+          <InteractiveShowcase
+            lang={lang}
+            initialWidgetId={activeWidgetId}
+            focusWidget={widgetPickedFromHero}
+            onWidgetChange={setActiveWidgetId}
+          />
         ) : activeTab === 'contact' ? (
           <ContactView lang={lang} />
         ) : (
@@ -145,6 +165,54 @@ export function App() {
                       </span>
                     </div>
                   )}
+                </div>
+
+                {/* Every interactive tool, straight from the homepage */}
+                <div className="relative z-10 mt-8 pt-8 border-t border-black/5 dark:border-white/5">
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#6b6b66] dark:text-[#a3a39d]">
+                      <Cpu className="w-3.5 h-3.5 text-blue-500" />
+                      {lang === 'en' ? 'Interactive tools' : 'Outils interactifs'}
+                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        {widgets.length}
+                      </span>
+                    </h2>
+                    <button
+                      onClick={() => openWidget(activeWidgetId)}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:gap-2 transition-all"
+                    >
+                      {lang === 'en' ? 'Open the full lab' : 'Ouvrir le labo complet'}
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {widgets.map((w) => {
+                      const Icon = w.icon;
+                      return (
+                        <button
+                          key={w.id}
+                          onClick={() => openWidget(w.id)}
+                          className="p-4 rounded-2xl text-left bg-[#f5f5f3] dark:bg-[#242422] border border-black/10 dark:border-white/10 hover:border-blue-500/60 hover:shadow-sm transition-all group"
+                        >
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <span className="p-2 rounded-xl bg-white dark:bg-[#1a1a18] text-blue-600 dark:text-blue-400 border border-black/5 dark:border-white/5 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                              <Icon className="w-4 h-4" />
+                            </span>
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 text-[#6b6b66] dark:text-[#a3a39d] text-right">
+                              {w.badge}
+                            </span>
+                          </div>
+                          <h3 className="font-bold text-sm text-[#1a1a18] dark:text-[#ededeb] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1">
+                            {w.shortTitle}
+                          </h3>
+                          <p className="text-xs text-[#6b6b66] dark:text-[#a3a39d] line-clamp-2 leading-relaxed">
+                            {w.description}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </section>
             )}
