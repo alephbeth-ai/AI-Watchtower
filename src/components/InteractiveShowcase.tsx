@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Cpu, Sparkles, Layers, Activity, HelpCircle, Binary, ShieldAlert } from 'lucide-react';
+import { Cpu, Sparkles, Layers, Activity, HelpCircle, Binary, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { Language } from '../types';
 import { WidgetEmbed } from './WidgetEmbed';
 
@@ -9,7 +9,7 @@ interface InteractiveShowcaseProps {
 
 interface WidgetDef {
   id: string;
-  category: 'architectures' | 'security';
+  category: 'architectures' | 'security' | 'hardening';
   title: string;
   paper: string;
   src: string;
@@ -85,6 +85,27 @@ export const InteractiveShowcase: React.FC<InteractiveShowcaseProps> = ({ lang }
           ? 'Use ← → or the dots to navigate · fullscreen available'
           : 'Naviguez avec ← → ou les points · plein écran disponible',
     },
+    {
+      id: 'hardening',
+      category: 'hardening',
+      title:
+        lang === 'en'
+          ? 'Agentic Hardening Lab: Trifecta, ASI Top 10, Checklist'
+          : 'Labo de durcissement agentique : trifecta, ASI Top 10, checklist',
+      paper: 'OWASP Agentic Security Initiative — ASI Top 10 (2026) · MAESTRO',
+      src: lang === 'en' ? '/widgets/hardening-en.html' : '/widgets/hardening-fr.html',
+      description:
+        lang === 'en'
+          ? 'Three working tools: tick the capabilities you actually grant an agent and watch the lethal trifecta close, explore the OWASP ASI Top 10 with its mapped countermeasures, and run the hardening checklist — thirty minutes on a workstation, then the deployment posture — with your progress saved locally.'
+          : 'Trois outils : cochez les capacités réellement accordées à un agent et voyez la trifecta létale se refermer, explorez l\'OWASP ASI Top 10 et ses contre-mesures, puis déroulez la checklist de durcissement — trente minutes sur un poste, puis la posture de déploiement — avec progression sauvegardée localement.',
+      badge: 'Applied Defense',
+      icon: ShieldCheck,
+      variant: 'app',
+      hint:
+        lang === 'en'
+          ? 'Switch tools with the tabs · fullscreen available'
+          : 'Changez d\'outil avec les onglets · plein écran disponible',
+    },
   ];
 
   const categories: { key: WidgetDef['category']; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -97,6 +118,14 @@ export const InteractiveShowcase: React.FC<InteractiveShowcaseProps> = ({ lang }
       key: 'security',
       label: lang === 'en' ? 'Tokens & Security' : 'Tokens & Sécurité',
       icon: ShieldAlert,
+    },
+    {
+      key: 'hardening',
+      label:
+        lang === 'en'
+          ? 'Practical Hardening & Agentic Security Research'
+          : 'Durcissement pratique & recherche en sécurité agentique',
+      icon: ShieldCheck,
     },
   ];
 
