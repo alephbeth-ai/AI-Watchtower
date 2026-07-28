@@ -16,7 +16,9 @@ interface WidgetDef {
   description: string;
   badge: string;
   icon: React.ComponentType<{ className?: string }>;
-  frenchOnly?: boolean;
+  /** Fixed-viewport widgets (slide decks) get their own framed window. */
+  variant?: 'flow' | 'app';
+  hint?: string;
 }
 
 export const InteractiveShowcase: React.FC<InteractiveShowcaseProps> = ({ lang }) => {
@@ -70,14 +72,18 @@ export const InteractiveShowcase: React.FC<InteractiveShowcaseProps> = ({ lang }
           ? 'Tokens & Tokenization: the Hidden Attack Surface'
           : 'Les Tokens : la matière première invisible des LLM',
       paper: 'Sennrich et al. (BPE) · Kudo (Unigram) · "Fishing for Magikarp" · TokenBreak (2025)',
-      src: '/widgets/tokens-fr.html',
+      src: lang === 'en' ? '/widgets/tokens-en.html' : '/widgets/tokens-fr.html',
       description:
         lang === 'en'
-          ? '24-screen interactive deck (in French): BPE, WordPiece and Unigram tokenizers trained live in your browser, plus five families of tokenizer-level attacks — glitch tokens, homoglyphs, TokenBreak, token smuggling, token bombs — and nine hardening measures.'
+          ? '24-screen interactive deck: BPE, WordPiece and Unigram tokenizers trained live in your browser, plus five families of tokenizer-level attacks — glitch tokens, homoglyphs, TokenBreak, token smuggling, token bombs — and nine hardening measures.'
           : 'Présentation interactive en 24 écrans : tokeniseurs BPE, WordPiece et Unigram entraînés en direct dans votre navigateur, puis cinq familles d\'attaques au niveau du tokeniseur — glitch tokens, homoglyphes, TokenBreak, contrebande et bombes de tokens — et neuf mesures de durcissement.',
       badge: 'Security Deep Dive',
       icon: Binary,
-      frenchOnly: true,
+      variant: 'app',
+      hint:
+        lang === 'en'
+          ? 'Use ← → or the dots to navigate · fullscreen available'
+          : 'Naviguez avec ← → ou les points · plein écran disponible',
     },
   ];
 
@@ -188,15 +194,19 @@ export const InteractiveShowcase: React.FC<InteractiveShowcaseProps> = ({ lang }
             <p className="text-xs font-mono text-[#6b6b66] dark:text-[#a3a39d]">{current.paper}</p>
           </div>
           <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-            {current.frenchOnly && lang === 'en'
-              ? 'Currently available in French'
-              : lang === 'en'
+            {current.hint ||
+              (lang === 'en'
                 ? 'Click steps or tokens to step through'
-                : 'Cliquez sur les étapes ou mots'}
+                : 'Cliquez sur les étapes ou mots')}
           </span>
         </div>
 
-        <WidgetEmbed key={`${current.id}-${lang}`} src={current.src} title={current.title} />
+        <WidgetEmbed
+          key={`${current.id}-${lang}`}
+          src={current.src}
+          title={current.title}
+          variant={current.variant}
+        />
 
         <div className="mt-4 p-4 rounded-xl bg-[#f5f5f3] dark:bg-[#242422] text-xs text-[#6b6b66] dark:text-[#a3a39d] flex items-start gap-3">
           <HelpCircle className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />

@@ -33,7 +33,7 @@ The site is a single-page application built with **React 18 + TypeScript + Vite 
 │   └── fr/posts/                   # French articles (Markdown + frontmatter)
 ├── static/
 │   ├── favicon.svg
-│   └── widgets/                    # Standalone HTML teaching widgets (lstm/cnn/transformer en+fr, tokens fr)
+│   └── widgets/                    # Standalone HTML teaching widgets (lstm/cnn/transformer/tokens, en+fr)
 └── .github/workflows/deploy.yml    # Build + deploy to GitHub Pages
 ```
 
