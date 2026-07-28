@@ -22,8 +22,14 @@ export const WidgetEmbed: React.FC<WidgetEmbedProps> = ({ src, title = 'Interact
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // Normalize src to ensure it starts with /
-  const normalizedSrc = src.startsWith('/') ? src : `/${src}`;
+  // Normalize src to ensure it respects Vite's BASE_URL (crucial for GitHub Pages subpaths)
+  const normalizedSrc = (() => {
+    if (!src) return '';
+    if (src.startsWith('http://') || src.startsWith('https://')) return src;
+    const cleanSrc = src.startsWith('/') ? src.slice(1) : src;
+    const baseUrl = import.meta.env.BASE_URL || './';
+    return baseUrl.endsWith('/') ? `${baseUrl}${cleanSrc}` : `${baseUrl}/${cleanSrc}`;
+  })();
 
   return (
     <div className="my-8 rounded-xl border border-black/10 dark:border-white/15 overflow-hidden bg-white dark:bg-[#1a1a18] shadow-sm">
