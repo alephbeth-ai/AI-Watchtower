@@ -45,6 +45,9 @@ jobs:
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: false
+        continue-on-error: true
 
       - name: Build with Hugo
         env:
@@ -52,10 +55,14 @@ jobs:
           HUGO_ENVIRONMENT: production
           TZ: Europe/Paris
         run: |
+          BASE_URL="${{ steps.pages.outputs.base_url }}"
+          if [ -z "$BASE_URL" ]; then
+            BASE_URL="https://aleph-beth.github.io/AI-Watchtower"
+          fi
           hugo \
             --gc \
             --minify \
-            --baseURL "${{ steps.pages.outputs.base_url }}/"
+            --baseURL "${BASE_URL}/"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
