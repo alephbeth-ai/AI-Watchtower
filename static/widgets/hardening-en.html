@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agentic Hardening Lab</title>
+<style>
+:root{
+  --bg:#0b0d13; --bg2:#11141d; --surf:#161a26; --surf2:#1d2231;
+  --line:#2a3145; --line2:#3a4360;
+  --tx:#e8ebf2; --tx2:#a4aec5; --tx3:#6d7794;
+  --acc:#7aa2ff; --acc2:#b78bff; --ok:#4fd1a5; --warn:#ffc861; --bad:#ff7a8a;
+  --shadow:0 18px 50px -20px rgba(0,0,0,.85);
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+html[data-theme="light"]{
+  --bg:#f6f7fb; --bg2:#eef0f7; --surf:#ffffff; --surf2:#f2f4fa;
+  --line:#dde1ec; --line2:#c6cddf;
+  --tx:#141824; --tx2:#4d566e; --tx3:#7c869e;
+  --acc:#2f5fd0; --acc2:#7c3fd4; --ok:#0d8f68; --warn:#a86b00; --bad:#c0334a;
+  --shadow:0 14px 40px -18px rgba(20,25,45,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--tx); overflow:hidden;
+  font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:15.5px; line-height:1.6; -webkit-font-smoothing:antialiased;
+  display:flex; flex-direction:column;
+  transition:background .35s ease,color .35s ease;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(900px 600px at 10% -8%, color-mix(in srgb,var(--acc) 13%,transparent), transparent 60%),
+    radial-gradient(800px 500px at 98% 108%, color-mix(in srgb,var(--bad) 10%,transparent), transparent 60%);
+}
+#top{
+  position:relative;z-index:5;display:flex;align-items:center;gap:14px;
+  padding:11px 18px;border-bottom:1px solid var(--line);flex:none;
+  background:color-mix(in srgb,var(--bg) 84%,transparent);backdrop-filter:blur(14px);
+}
+#brand{font-weight:800;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx3);white-space:nowrap}
+#tabs{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.tab{
+  background:var(--surf);border:1px solid var(--line);color:var(--tx2);
+  padding:7px 14px;border-radius:99px;cursor:pointer;font-size:13px;font-weight:650;
+  font-family:inherit;transition:.18s;white-space:nowrap;
+}
+.tab:hover{border-color:var(--acc);color:var(--tx)}
+.tab.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-color:transparent}
+.iconbtn{
+  background:var(--surf);border:1px solid var(--line);color:var(--tx2);
+  width:32px;height:32px;border-radius:9px;cursor:pointer;display:grid;place-items:center;
+  font-size:14px;transition:.18s;flex:none;
+}
+.iconbtn:hover{border-color:var(--acc);color:var(--tx)}
+#panels{position:relative;z-index:1;flex:1;overflow-y:auto;overflow-x:hidden;padding:24px 20px 40px}
+#panels::-webkit-scrollbar{width:9px}
+#panels::-webkit-scrollbar-thumb{background:var(--line2);border-radius:9px}
+.panel{display:none;max-width:1000px;margin:0 auto}
+.panel.on{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+h1{font-size:clamp(21px,3vw,27px);line-height:1.15;letter-spacing:-.02em;font-weight:800;margin-bottom:8px}
+h2{font-size:16px;font-weight:750;margin-bottom:8px;letter-spacing:-.01em}
+h3{font-size:13px;font-weight:800;margin-bottom:9px;color:var(--tx2);text-transform:uppercase;letter-spacing:.09em}
+p{color:var(--tx2);margin-bottom:12px;max-width:78ch}
+.lead{font-size:15px;color:var(--tx2)}
+strong{color:var(--tx);font-weight:650}
+.grad{background:linear-gradient(100deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+code{font-family:var(--mono);font-size:.9em;background:var(--surf2);padding:1.5px 5px;border-radius:5px;border:1px solid var(--line);color:var(--tx)}
+
+.card{background:var(--surf);border:1px solid var(--line);border-radius:15px;padding:18px;box-shadow:var(--shadow)}
+.card.soft{background:var(--surf2);box-shadow:none}
+.stack{display:flex;flex-direction:column;gap:16px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:10.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,transparent);
+  border:1px solid color-mix(in srgb,var(--acc) 30%,transparent);
+  padding:4px 11px;border-radius:99px;margin-bottom:12px;
+}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;
+  background:var(--surf2);border:1px solid var(--line);color:var(--tx2);font-family:var(--mono)}
+.tag.red{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,transparent);background:color-mix(in srgb,var(--bad) 10%,transparent)}
+.tag.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent);background:color-mix(in srgb,var(--ok) 10%,transparent)}
+.tag.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 40%,transparent);background:color-mix(in srgb,var(--warn) 10%,transparent)}
+.callout{border-left:3px solid var(--acc);background:color-mix(in srgb,var(--acc) 8%,var(--surf));padding:13px 16px;border-radius:0 12px 12px 0}
+.callout.red{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 9%,var(--surf))}
+.callout.green{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 9%,var(--surf))}
+.callout.warn{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 9%,var(--surf))}
+.callout p:last-child{margin-bottom:0}
+.hint{font-size:12.5px;color:var(--tx3);font-style:italic}
+.divider{height:1px;background:var(--line);margin:16px 0}
+.btn{background:linear-gradient(135deg,var(--acc),var(--acc2));border:none;color:#fff;
+  padding:8px 15px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;transition:.18s}
+.btn:hover{filter:brightness(1.12)}
+.btn.ghost{background:var(--surf2);color:var(--tx);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--acc);filter:none}
+
+/* leg / capability toggles */
+.leg{border:1px solid var(--line);border-radius:14px;padding:15px;background:var(--surf);transition:.25s}
+.leg.armed{border-color:color-mix(in srgb,var(--bad) 55%,transparent);background:color-mix(in srgb,var(--bad) 7%,var(--surf))}
+.leg-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px}
+.leg-t{font-weight:750;font-size:14.5px}
+.leg-d{font-size:12.5px;color:var(--tx3);margin-bottom:11px;line-height:1.45}
+.cap{display:flex;gap:9px;align-items:flex-start;padding:7px 9px;border-radius:9px;cursor:pointer;transition:.15s;border:1px solid transparent}
+.cap:hover{background:var(--surf2);border-color:var(--line)}
+.cap input{margin-top:3px;accent-color:var(--acc);cursor:pointer;flex:none;width:15px;height:15px}
+.cap-l{font-size:13.5px;color:var(--tx2);line-height:1.4}
+.cap input:checked+.cap-l{color:var(--tx);font-weight:600}
+.cap-w{font-size:10px;font-family:var(--mono);color:var(--bad);border:1px solid color-mix(in srgb,var(--bad) 35%,transparent);
+  padding:1px 5px;border-radius:5px;margin-left:6px;vertical-align:middle}
+
+.gauge{height:11px;border-radius:99px;background:var(--line);overflow:hidden;margin:9px 0}
+.gauge>i{display:block;height:100%;border-radius:99px;transition:width .5s cubic-bezier(.2,.8,.2,1),background .4s}
+.score{font-family:var(--mono);font-size:clamp(26px,4vw,36px);font-weight:800;letter-spacing:-.03em;line-height:1}
+.kpi{background:var(--surf2);border:1px solid var(--line);border-radius:13px;padding:14px}
+.kpi .l{font-size:11.5px;color:var(--tx3);margin-top:6px;line-height:1.35}
+
+/* ASI cards */
+.asi{border:1px solid var(--line);border-radius:13px;background:var(--surf);overflow:hidden;transition:.2s}
+.asi:hover{border-color:var(--acc)}
+.asi-h{display:flex;gap:12px;align-items:center;padding:13px 15px;cursor:pointer;width:100%;background:none;
+  border:none;font-family:inherit;text-align:left;color:inherit}
+.asi-n{font-family:var(--mono);font-size:11.5px;font-weight:800;color:var(--bad);flex:none;
+  background:color-mix(in srgb,var(--bad) 13%,transparent);padding:4px 8px;border-radius:7px}
+.asi-t{font-weight:700;font-size:14px;flex:1}
+.asi-x{color:var(--tx3);font-size:15px;flex:none;transition:transform .25s}
+.asi.open .asi-x{transform:rotate(45deg)}
+.asi-b{display:none;padding:0 15px 15px;border-top:1px solid var(--line)}
+.asi.open .asi-b{display:block;animation:fade .25s ease}
+.asi-b p{font-size:13.5px;margin:12px 0 10px}
+.mit{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--tx2);margin-bottom:6px;line-height:1.45}
+.mit::before{content:"→";color:var(--ok);font-weight:800;flex:none}
+
+/* checklist */
+.chk{display:flex;gap:11px;align-items:flex-start;padding:10px 12px;border-radius:10px;cursor:pointer;
+  border:1px solid var(--line);background:var(--surf);transition:.15s;margin-bottom:8px}
+.chk:hover{border-color:var(--acc)}
+.chk input{margin-top:3px;accent-color:var(--ok);cursor:pointer;flex:none;width:16px;height:16px}
+.chk-t{font-size:13.5px;color:var(--tx2);line-height:1.45}
+.chk input:checked~.chk-t{color:var(--tx3);text-decoration:line-through}
+.sticky-score{position:sticky;top:0;z-index:3;background:color-mix(in srgb,var(--bg) 92%,transparent);
+  backdrop-filter:blur(10px);padding:12px 0;margin-bottom:6px;border-bottom:1px solid var(--line)}
+@media (max-width:640px){
+  #panels{padding:18px 14px 36px}
+  #brand{display:none}
+  .card{padding:14px}
+}
+</style>
+</head>
+<body>
+
+<div id="top">
+  <span id="brand">Agentic Hardening Lab</span>
+  <div id="tabs">
+    <button class="tab on" data-tab="0"></button>
+    <button class="tab" data-tab="1"></button>
+    <button class="tab" data-tab="2"></button>
+  </div>
+  <button class="iconbtn" id="themebtn" title="Light / dark theme">◐</button>
+</div>
+
+<div id="panels">
+
+  <!-- ============ PANEL 1 — TRIFECTA ============ -->
+  <section class="panel on" id="p0">
+    <span class="eyebrow" id="p0-eyebrow"></span>
+    <h1 id="p0-title"></h1>
+    <p class="lead" id="p0-lead"></p>
+
+    <div class="row" style="margin:14px 0 18px">
+      <span class="tag" id="p0-preset-label"></span>
+      <button class="btn ghost" data-preset="chat"></button>
+      <button class="btn ghost" data-preset="desktop"></button>
+      <button class="btn ghost" data-preset="soc"></button>
+      <button class="btn ghost" data-preset="clear"></button>
+    </div>
+
+    <div class="grid g3" id="legs" style="margin-bottom:18px"></div>
+
+    <div class="card" id="verdict-card">
+      <div class="grid g2" style="align-items:center">
+        <div>
+          <h3 id="p0-verdict-h"></h3>
+          <div class="score" id="v-score">0</div>
+          <div class="gauge"><i id="v-gauge" style="width:0%"></i></div>
+          <div id="v-label" style="font-weight:700;font-size:14px"></div>
+        </div>
+        <div class="grid g3">
+          <div class="kpi"><div class="tag" id="v-leg0"></div><div class="l" id="v-leg0l"></div></div>
+          <div class="kpi"><div class="tag" id="v-leg1"></div><div class="l" id="v-leg1l"></div></div>
+          <div class="kpi"><div class="tag" id="v-leg2"></div><div class="l" id="v-leg2l"></div></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div id="v-msg"></div>
+      <div id="v-mitig" class="stack" style="gap:8px;margin-top:14px"></div>
+    </div>
+
+    <p class="hint" style="margin-top:14px" id="p0-foot"></p>
+  </section>
+
+  <!-- ============ PANEL 2 — OWASP ASI ============ -->
+  <section class="panel" id="p1">
+    <span class="eyebrow" id="p1-eyebrow"></span>
+    <h1 id="p1-title"></h1>
+    <p class="lead" id="p1-lead"></p>
+    <div class="stack" id="asi-list" style="margin-top:18px"></div>
+    <div class="callout" style="margin-top:18px"><p id="p1-note"></p></div>
+  </section>
+
+  <!-- ============ PANEL 3 — CHECKLIST ============ -->
+  <section class="panel" id="p2">
+    <span class="eyebrow" id="p2-eyebrow"></span>
+    <h1 id="p2-title"></h1>
+    <p class="lead" id="p2-lead"></p>
+
+    <div class="sticky-score">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <span class="score" id="c-score" style="font-size:24px">0</span>
+          <span style="color:var(--tx3);font-family:var(--mono);font-size:13px" id="c-total"></span>
+        </div>
+        <div class="row">
+          <span class="tag" id="c-band"></span>
+          <button class="btn ghost" id="c-reset"></button>
+        </div>
+      </div>
+      <div class="gauge"><i id="c-gauge" style="width:0%"></i></div>
+    </div>
+
+    <div id="chk-groups" class="stack" style="margin-top:14px"></div>
+    <p class="hint" style="margin-top:16px" id="p2-foot"></p>
+  </section>
+
+</div>
+
+<script>
+(function(){
+'use strict';
+var LANG = 'en';
+
+/* ================================================================
+   CONTENT — sourced from the AI Watchtower articles:
+   "Claude Desktop — Simple Hardening" (2026-04-27) and
+   "The Agentic SOC: attacks on defensive AI" (2026-06-10).
+   ================================================================ */
+var T = {
+  en:{
+    brand:'Agentic Hardening Lab',
+    tabs:['Lethal trifecta','OWASP ASI Top 10','Hardening checklist'],
+    p0:{
+      eyebrow:'Tool 1 · Blast radius',
+      title:'What have you actually granted your agent?',
+      lead:'An agent becomes dangerous when three capabilities meet: access to private data, ingestion of untrusted content, and the ability to act outward. Tick what your deployment really grants and watch the trifecta close.',
+      presetLabel:'Presets',
+      presets:{chat:'Chat only',desktop:'Typical desktop setup',soc:'Write-capable SOC agent',clear:'Clear'},
+      verdictH:'Residual exposure',
+      legNames:['Private data','Untrusted ingestion','Outbound action'],
+      legOpen:'open',legClosed:'closed',
+      bands:[
+        {max:0,  label:'No surface — the agent can do nothing on your behalf.',cls:'ok'},
+        {max:34, label:'Contained — one leg armed, no complete chain.',cls:'ok'},
+        {max:67, label:'Exposed — two legs armed; one capability away from a full chain.',cls:'warn'},
+        {max:101,label:'Critical — the three legs are armed.',cls:'bad'}
+      ],
+      complete:'<strong>The trifecta is complete.</strong> A single booby-trapped document, ticket, alert or web page read by the agent can now redirect its goal (indirect prompt injection), reach your private data, and push it outward — without any user action and without a classic pentest or WAF seeing anything pass.',
+      incomplete:'<strong>The chain is broken.</strong> As long as one leg stays closed, an indirect prompt injection has no path to complete. That is the whole point of compartmentalization: you do not have to make the agent unattackable, only to keep one leg shut.',
+      empty:'Nothing granted yet. Tick the capabilities your agent actually has — in production, not on the architecture diagram.',
+      mitigTitle:'Targeted mitigations for what you ticked',
+      writeWarn:'write-capable',
+      foot:'Weighting reflects blast radius, not likelihood: a capability that is irreversible or that grants free egress weighs more. Read-only access to public data weighs almost nothing.'
+    },
+    p1:{
+      eyebrow:'Tool 2 · Taxonomy',
+      title:'OWASP Agentic Security Initiative — ASI Top 10 (2026)',
+      lead:'A risk taxonomy distinct from the classic LLM Top 10, published in 2026 alongside the MAESTRO threat-modeling framework. The first three risks are precisely those specific to write-capable agents. Open a card to see the mapped countermeasures.',
+      note:'The extended risks matter as soon as you chain several agents or rely on third-party MCP servers. Classic pentests, WAFs and IDSs see none of this pass: agent-specific red-teaming — indirect prompt injection, goal hijacking, tool misuse — has to enter the audit scope explicitly.'
+    },
+    p2:{
+      eyebrow:'Tool 3 · Practice',
+      title:'From posture to checklist',
+      lead:'Two lists. The first takes thirty minutes on a workstation. The second is the deployment posture for any autonomous agent. Your progress is stored locally in this browser.',
+      total:' of 15 measures applied',
+      reset:'Reset',
+      groups:['Workstation — 30 minutes','Agentic deployment posture'],
+      bands:[
+        {max:0,  label:'Not started',cls:'red'},
+        {max:39, label:'Exposed',cls:'red'},
+        {max:79, label:'Partially hardened',cls:'warn'},
+        {max:99, label:'Solid',cls:'warn'},
+        {max:101,label:'Complete',cls:'ok'}
+      ],
+      foot:'Expected outcome of the first list: in thirty minutes the assistant is back to being a pure chat surface, with no MCP attack surface — the RCE risk through a malicious config drops to near zero and what remained of the trifecta is broken.'
+    }
+  },
+  fr:{
+    brand:'Labo de durcissement agentique',
+    tabs:['Trifecta létale','OWASP ASI Top 10','Checklist de durcissement'],
+    p0:{
+      eyebrow:'Outil 1 · Rayon de souffle',
+      title:'Qu’avez-vous réellement accordé à votre agent ?',
+      lead:'Un agent devient dangereux quand trois capacités se rejoignent : l’accès aux données privées, l’ingestion de contenu non fiable et la capacité d’agir vers l’extérieur. Cochez ce que votre déploiement accorde vraiment et regardez la trifecta se refermer.',
+      presetLabel:'Profils',
+      presets:{chat:'Chat seul',desktop:'Poste type',soc:'Agent SOC en écriture',clear:'Effacer'},
+      verdictH:'Exposition résiduelle',
+      legNames:['Données privées','Ingestion non fiable','Action sortante'],
+      legOpen:'ouverte',legClosed:'fermée',
+      bands:[
+        {max:0,  label:'Aucune surface — l’agent ne peut rien faire en votre nom.',cls:'ok'},
+        {max:34, label:'Contenu — une branche armée, pas de chaîne complète.',cls:'ok'},
+        {max:67, label:'Exposé — deux branches armées ; une capacité de la chaîne complète.',cls:'warn'},
+        {max:101,label:'Critique — les trois branches sont armées.',cls:'bad'}
+      ],
+      complete:'<strong>La trifecta est complète.</strong> Un seul document, ticket, alerte ou page web piégé et lu par l’agent peut désormais détourner son objectif (injection de prompt indirecte), atteindre vos données privées et les pousser vers l’extérieur — sans action de l’utilisateur, et sans qu’un pentest classique ou un WAF ne voie quoi que ce soit passer.',
+      incomplete:'<strong>La chaîne est rompue.</strong> Tant qu’une branche reste fermée, une injection indirecte n’a aucun chemin pour aboutir. C’est tout l’intérêt du cloisonnement : il ne s’agit pas de rendre l’agent inattaquable, seulement de garder une branche fermée.',
+      empty:'Rien d’accordé pour l’instant. Cochez les capacités dont votre agent dispose réellement — en production, pas sur le schéma d’architecture.',
+      mitigTitle:'Mesures ciblées pour ce que vous avez coché',
+      writeWarn:'écriture',
+      foot:'La pondération reflète le rayon de souffle, pas la probabilité : une capacité irréversible ou qui ouvre une sortie libre pèse davantage. Un accès en lecture seule à des données publiques ne pèse presque rien.'
+    },
+    p1:{
+      eyebrow:'Outil 2 · Taxonomie',
+      title:'OWASP Agentic Security Initiative — ASI Top 10 (2026)',
+      lead:'Une taxonomie de risques distincte du Top 10 LLM classique, publiée en 2026 avec le framework de modélisation de menaces MAESTRO. Les trois premiers risques sont précisément ceux qui sont propres aux agents disposant du droit d’écriture. Ouvrez une fiche pour voir les contre-mesures associées.',
+      note:'Les risques étendus deviennent pertinents dès que l’on chaîne plusieurs agents ou que l’on s’appuie sur des serveurs MCP tiers. Les pentests classiques, les WAF et les IDS ne voient rien passer de tout cela : le red-teaming spécifique aux agents — injection indirecte, détournement d’objectif, mésusage d’outil — doit entrer explicitement dans le périmètre d’audit.'
+    },
+    p2:{
+      eyebrow:'Outil 3 · Pratique',
+      title:'De la posture à la checklist',
+      lead:'Deux listes. La première prend trente minutes sur un poste de travail. La seconde est la posture de déploiement de tout agent autonome. Votre progression est stockée localement dans ce navigateur.',
+      total:' mesures appliquées sur 15',
+      reset:'Réinitialiser',
+      groups:['Poste de travail — 30 minutes','Posture de déploiement agentique'],
+      bands:[
+        {max:0,  label:'Non commencé',cls:'red'},
+        {max:39, label:'Exposé',cls:'red'},
+        {max:79, label:'Partiellement durci',cls:'warn'},
+        {max:99, label:'Solide',cls:'warn'},
+        {max:101,label:'Complet',cls:'ok'}
+      ],
+      foot:'Résultat attendu de la première liste : en trente minutes, l’assistant redevient une pure surface de conversation, sans surface d’attaque MCP — le risque de RCE via une configuration malveillante tombe à quasi zéro et ce qui restait de la trifecta est rompu.'
+    }
+  }
+};
+
+/* ---- capabilities: axis, weight (blast radius), write flag ---- */
+var CAPS = [
+  {axis:0,w:8, write:false,en:'Local filesystem (documents, projects)',fr:'Système de fichiers local (documents, projets)'},
+  {axis:0,w:9, write:false,en:'Mail history / mailbox read',fr:'Historique de messagerie / lecture de la boîte mail'},
+  {axis:0,w:10,write:false,en:'Secrets: .env, keychain, credential manager',fr:'Secrets : .env, trousseau, gestionnaire d’identifiants'},
+  {axis:0,w:9, write:false,en:'Cloud credentials (AWS, GCP, Azure, broad PAT)',fr:'Identifiants cloud (AWS, GCP, Azure, PAT large)'},
+  {axis:0,w:7, write:false,en:'Internal database or SIEM read access',fr:'Accès en lecture à une base interne ou au SIEM'},
+  {axis:0,w:5, write:false,en:'Contacts / address book',fr:'Contacts / carnet d’adresses'},
+
+  {axis:1,w:9, write:false,en:'Autonomous web browsing',fr:'Navigation web autonome'},
+  {axis:1,w:9, write:false,en:'Incoming email read by the agent',fr:'Courriels entrants lus par l’agent'},
+  {axis:1,w:8, write:false,en:'Tickets, issues, code review comments',fr:'Tickets, issues, commentaires de revue de code'},
+  {axis:1,w:8, write:false,en:'Alerts, logs, threat reports',fr:'Alertes, journaux, rapports de menace'},
+  {axis:1,w:6, write:false,en:'User-supplied documents (PDF, Office, images)',fr:'Documents fournis par l’utilisateur (PDF, bureautique, images)'},
+  {axis:1,w:7, write:false,en:'Third-party MCP servers you do not control',fr:'Serveurs MCP tiers que vous ne contrôlez pas'},
+
+  {axis:2,w:10,write:true, en:'Send email under your identity',fr:'Envoi de courriels sous votre identité'},
+  {axis:2,w:9, write:true, en:'Messaging (Slack, Teams, WhatsApp, iMessage)',fr:'Messagerie (Slack, Teams, WhatsApp, iMessage)'},
+  {axis:2,w:10,write:true, en:'Generic HTTP fetch / unrestricted egress',fr:'Requêtes HTTP génériques / sortie réseau non restreinte'},
+  {axis:2,w:12,write:true, en:'Shell, PowerShell, bash',fr:'Shell, PowerShell, bash'},
+  {axis:2,w:10,write:true, en:'Write to SaaS (Jira, GitHub, Notion, CRM)',fr:'Écriture vers un SaaS (Jira, GitHub, Notion, CRM)'},
+  {axis:2,w:12,write:true, en:'Infrastructure changes (firewall, Docker, K8s)',fr:'Modifications d’infrastructure (pare-feu, Docker, K8s)'}
+];
+
+var AXIS_DESC = {
+  en:['Everything the agent can read that you would not publish.','Everything the agent reads that an attacker can write into.','Everything the agent can do that leaves a trace outside the session.'],
+  fr:['Tout ce que l’agent peut lire et que vous ne publieriez pas.','Tout ce que l’agent lit et où un attaquant peut écrire.','Tout ce que l’agent peut faire qui laisse une trace hors de la session.']
+};
+
+/* mitigation advice keyed by axis */
+var MITIG = {
+  en:[
+    'Private data — scope the access: read-only, per-project, and never the secret stores. What the agent cannot read cannot be exfiltrated.',
+    'Untrusted ingestion — treat every ingested byte as attacker-controlled input. Strip invisible Unicode, isolate quoted content, and never let read content authorize an action.',
+    'Outbound action — separate proposal from application: the agent proposes, a human or a supervisor agent applies. Allowlist egress, and keep an immutable (WORM) log of decisions and actions.'
+  ],
+  fr:[
+    'Données privées — cadrez l’accès : lecture seule, par projet, et jamais les magasins de secrets. Ce que l’agent ne peut pas lire ne peut pas être exfiltré.',
+    'Ingestion non fiable — traitez chaque octet ingéré comme une entrée contrôlée par l’attaquant. Supprimez l’Unicode invisible, isolez le contenu cité, et ne laissez jamais un contenu lu autoriser une action.',
+    'Action sortante — séparez la proposition de l’application : l’agent propose, un humain ou un agent superviseur applique. Restreignez la sortie réseau par liste d’autorisation et conservez un journal immuable (WORM) des décisions et des actions.'
+  ]
+};
+
+var PRESETS = {
+  chat:[],
+  desktop:[0,1,6,7,10,12,14],
+  soc:[4,9,3,11,16,17,14]
+};
+
+var ASI = [
+  {n:'ASI01',
+   en:{t:'Agent Goal Hijacking',d:'Malicious instructions hidden in content the agent reads — an alert, a log, a ticket, an email, a web page, a threat report — redirect its initial goal toward the attacker’s.',
+       m:['Treat every ingested content as untrusted input, never as instructions.','Isolate read content from the instruction channel (structural separation, not a politeness rule in the prompt).','Red-team with indirect prompt injection payloads before deployment.']},
+   fr:{t:'Détournement d’objectif',d:'Des instructions malveillantes dissimulées dans un contenu que l’agent lit — une alerte, un journal, un ticket, un courriel, une page web, un rapport de menace — redirigent son objectif initial vers celui de l’attaquant.',
+       m:['Traitez tout contenu ingéré comme une entrée non fiable, jamais comme des instructions.','Isolez le contenu lu du canal d’instruction (séparation structurelle, pas une consigne de politesse dans le prompt).','Menez un red-teaming avec des charges d’injection indirecte avant tout déploiement.']}},
+  {n:'ASI02',
+   en:{t:'Tool Misuse & Exploitation',d:'The agent uses a legitimate tool dangerously — modifying a firewall rule, disabling a detection, dropping a database — on the strength of a poisoned instruction or a misinterpretation.',
+       m:['Separate read/proposal from application: irreversible actions go through a human in the loop or a supervisor agent.','Allowlist the tools available per task rather than exposing the full catalogue.','Make destructive operations reversible by default (soft delete, staged changes).']},
+   fr:{t:'Mésusage et exploitation des outils',d:'L’agent utilise un outil légitime de façon dangereuse — modifier une règle de pare-feu, désactiver une détection, supprimer une base — sur la foi d’une instruction empoisonnée ou d’une mauvaise interprétation.',
+       m:['Séparez lecture/proposition et application : les actions irréversibles passent par un humain dans la boucle ou un agent superviseur.','Restreignez par liste d’autorisation les outils disponibles par tâche plutôt que d’exposer tout le catalogue.','Rendez les opérations destructrices réversibles par défaut (suppression douce, changements en attente).']}},
+  {n:'ASI03',
+   en:{t:'Agent Identity & Privilege Abuse',d:'The agent’s identity — often a broad-privilege account — is abused to escalate. An agent can map an entire permission graph, find the weakest node, and exploit it in seconds.',
+       m:['Treat the agent identity as a privileged account in its own right: short scopes, secret rotation, workload identity.','Enforce strict least privilege, re-evaluated per task rather than granted once at setup.','Keep backups out of the agent’s reach: separate account, immutable storage.']},
+   fr:{t:'Abus d’identité et de privilèges',d:'L’identité de l’agent — souvent un compte à privilèges larges — est détournée pour escalader. Un agent peut cartographier tout un graphe de permissions, trouver le nœud le plus faible et l’exploiter en quelques secondes.',
+       m:['Traitez l’identité de l’agent comme un compte à privilèges à part entière : périmètres courts, rotation des secrets, identité de charge de travail.','Appliquez un moindre privilège strict, réévalué par tâche plutôt qu’accordé une fois pour toutes.','Gardez les sauvegardes hors de portée de l’agent : compte séparé, stockage immuable.']}},
+  {n:'ASI04–10',
+   en:{t:'Extended surface: supply chain, memory poisoning, rogue agents',d:'Agentic supply chain, code execution, memory and context poisoning, insecure inter-agent communication, cascading failures, exploitation of human-agent trust, rogue agents. This surface becomes relevant as soon as you chain several agents or rely on third-party MCP servers.',
+       m:['Pin and review third-party MCP servers as you would any dependency — including their update path.','Bound and expire agent memory; treat persisted context as a write target for attackers.','Test a kill switch for agents, do not merely document one — proven cutoff is the capability most deployments are missing.','Log decisions and actions immutably (WORM) for post-incident forensics.']},
+   fr:{t:'Surface étendue : chaîne d’approvisionnement, empoisonnement mémoire, agents rebelles',d:'Chaîne d’approvisionnement agentique, exécution de code, empoisonnement de la mémoire et du contexte, communications inter-agents non sécurisées, défaillances en cascade, exploitation de la confiance humain-agent, agents rebelles. Cette surface devient pertinente dès que l’on chaîne plusieurs agents ou que l’on dépend de serveurs MCP tiers.',
+       m:['Épinglez et auditez les serveurs MCP tiers comme n’importe quelle dépendance — y compris leur canal de mise à jour.','Bornez et faites expirer la mémoire de l’agent ; considérez le contexte persistant comme une cible d’écriture pour l’attaquant.','Testez un interrupteur d’arrêt, ne vous contentez pas de le documenter — la coupure éprouvée est précisément la capacité qui manque à la plupart des déploiements.','Journalisez décisions et actions de manière immuable (WORM) pour l’analyse post-incident.']}}
+];
+
+var CHECKS = [
+  {g:0,en:'Open the client config and empty the MCP servers section (or trim it to one or two vetted entries).',fr:'Ouvrir la configuration du client et vider la section des serveurs MCP (ou la réduire à une ou deux entrées vérifiées).'},
+  {g:0,en:'Revoke every token on the SaaS side for the MCPs you removed (mail, drive, code hosting, notes, chat).',fr:'Révoquer côté SaaS tous les jetons des MCP retirés (messagerie, drive, hébergement de code, notes, chat).'},
+  {g:0,en:'Disable auto-start of the assistant at boot.',fr:'Désactiver le démarrage automatique de l’assistant à l’ouverture de session.'},
+  {g:0,en:'Enable controlled folder access on documents, pictures, sensitive working folders and local backups.',fr:'Activer l’accès contrôlé aux dossiers sur les documents, images, dossiers de travail sensibles et sauvegardes locales.'},
+  {g:0,en:'Create an outbound firewall rule limiting the client to its vendor domain.',fr:'Créer une règle de pare-feu sortant limitant le client au domaine de son éditeur.'},
+  {g:0,en:'Update the client to the latest version.',fr:'Mettre à jour le client dans sa dernière version.'},
+  {g:0,en:'Audit camera, microphone and location permissions in the OS settings.',fr:'Auditer les autorisations caméra, micro et localisation dans les paramètres du système.'},
+  {g:0,en:'Clear the history of conversations containing sensitive material.',fr:'Effacer l’historique des conversations contenant des éléments sensibles.'},
+  {g:1,en:'Separate read/proposal from application: remediation goes through a human in the loop or a supervisor agent.',fr:'Séparer lecture/proposition et application : la remédiation passe par un humain dans la boucle ou un agent superviseur.'},
+  {g:1,en:'Treat the agent identity as a privileged account: short scopes, secret rotation, workload identity.',fr:'Traiter l’identité de l’agent comme un compte à privilèges : périmètres courts, rotation des secrets, identité de charge de travail.'},
+  {g:1,en:'Confine the lethal trifecta: never private data + untrusted ingestion + outbound action without compartmentalization.',fr:'Cloisonner la trifecta létale : jamais données privées + ingestion non fiable + action sortante sans compartimentation.'},
+  {g:1,en:'Log the agent’s decisions and actions immutably (WORM storage).',fr:'Journaliser les décisions et actions de l’agent de façon immuable (stockage WORM).'},
+  {g:1,en:'Prove a kill switch by testing it, rather than documenting it.',fr:'Éprouver un interrupteur d’arrêt en le testant, plutôt qu’en le documentant.'},
+  {g:1,en:'Keep backups out of the agent’s reach: separate account, immutable storage.',fr:'Garder les sauvegardes hors de portée de l’agent : compte séparé, stockage immuable.'},
+  {g:1,en:'Bring indirect prompt injection, goal hijacking and tool misuse into the audit scope.',fr:'Intégrer injection indirecte, détournement d’objectif et mésusage d’outil au périmètre d’audit.'}
+];
+
+/* ================================================================
+   HELPERS
+   ================================================================ */
+var t = T[LANG];
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function band(bands,v){ for(var i=0;i<bands.length;i++){ if(v<=bands[i].max) return bands[i]; } return bands[bands.length-1]; }
+function bandColor(cls){
+  if(cls==='ok')  return 'linear-gradient(90deg,var(--ok),var(--acc))';
+  if(cls==='warn')return 'linear-gradient(90deg,var(--warn),var(--bad))';
+  if(cls==='bad'||cls==='red') return 'linear-gradient(90deg,var(--bad),var(--acc2))';
+  return 'var(--line2)';
+}
+function store(key,val){ try{ localStorage.setItem(key,val); }catch(e){} }
+function load(key){ try{ return localStorage.getItem(key); }catch(e){ return null; } }
+
+/* ================================================================
+   CHROME
+   ================================================================ */
+$('brand').textContent = t.brand;
+document.title = t.brand;
+var tabBtns = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+var panels  = Array.prototype.slice.call(document.querySelectorAll('.panel'));
+tabBtns.forEach(function(b,i){
+  b.textContent = t.tabs[i];
+  b.onclick = function(){
+    tabBtns.forEach(function(x,k){ x.classList.toggle('on',k===i); });
+    panels.forEach(function(p,k){ p.classList.toggle('on',k===i); });
+    $('panels').scrollTop = 0;
+  };
+});
+$('themebtn').onclick = function(){
+  var h = document.documentElement;
+  h.dataset.theme = (h.dataset.theme==='light') ? 'dark' : 'light';
+};
+
+/* ================================================================
+   PANEL 1 — TRIFECTA
+   ================================================================ */
+$('p0-eyebrow').textContent = t.p0.eyebrow;
+$('p0-title').textContent   = t.p0.title;
+$('p0-lead').textContent    = t.p0.lead;
+$('p0-foot').textContent    = t.p0.foot;
+$('p0-verdict-h').textContent = t.p0.verdictH;
+$('p0-preset-label').textContent = t.p0.presetLabel;
+['chat','desktop','soc','clear'].forEach(function(k){
+  var b = document.querySelector('[data-preset="'+k+'"]');
+  b.textContent = t.p0.presets[k];
+  b.onclick = function(){
+    var want = PRESETS[k] || [];
+    CAPS.forEach(function(c,i){ $('cap'+i).checked = want.indexOf(i)>=0; });
+    updateTrifecta();
+  };
+});
+
+var legsEl = $('legs');
+[0,1,2].forEach(function(axis){
+  var d = document.createElement('div');
+  d.className = 'leg'; d.id = 'leg'+axis;
+  var caps = '';
+  CAPS.forEach(function(c,i){
+    if(c.axis!==axis) return;
+    caps += '<label class="cap"><input type="checkbox" id="cap'+i+'" data-cap="'+i+'">'
+         +  '<span class="cap-l">'+esc(c[LANG])
+         +  (c.write?'<span class="cap-w">'+esc(t.p0.writeWarn)+'</span>':'')+'</span></label>';
+  });
+  d.innerHTML = '<div class="leg-head"><span class="leg-t">'+esc(t.p0.legNames[axis])+'</span>'
+              + '<span class="tag" id="legtag'+axis+'"></span></div>'
+              + '<div class="leg-d">'+esc(AXIS_DESC[LANG][axis])+'</div>'+caps;
+  legsEl.appendChild(d);
+});
+
+Array.prototype.slice.call(document.querySelectorAll('[data-cap]')).forEach(function(inp){
+  inp.onchange = updateTrifecta;
+});
+
+function updateTrifecta(){
+  var armed = [false,false,false], score = 0, maxScore = 0, picked = [];
+  CAPS.forEach(function(c,i){
+    maxScore += c.w;
+    if($('cap'+i).checked){ armed[c.axis] = true; score += c.w; picked.push(c); }
+  });
+  var legCount = armed.filter(Boolean).length;
+
+  // A complete chain is worth more than the sum of its parts: each leg count
+  // maps to its own band, and the capability weights rank deployments inside it.
+  var raw = (score / maxScore) * 100;
+  var pct = 0;
+  if(legCount === 3)      pct = Math.round(78 + raw * 0.22);
+  else if(legCount === 2) pct = Math.round(35 + raw * 0.40);
+  else if(legCount === 1) pct = Math.round(raw * 0.50);
+  pct = Math.max(0, Math.min(100, pct));
+
+  var b = band(t.p0.bands, pct);
+  $('v-score').textContent = pct;
+  $('v-score').style.color = b.cls==='ok' ? 'var(--ok)' : (b.cls==='warn' ? 'var(--warn)' : 'var(--bad)');
+  $('v-gauge').style.width = pct + '%';
+  $('v-gauge').style.background = bandColor(b.cls);
+  $('v-label').textContent = b.label;
+  $('v-label').style.color = b.cls==='ok' ? 'var(--ok)' : (b.cls==='warn' ? 'var(--warn)' : 'var(--bad)');
+
+  [0,1,2].forEach(function(a){
+    $('leg'+a).classList.toggle('armed', armed[a]);
+    var tag = $('legtag'+a);
+    tag.textContent = armed[a] ? t.p0.legOpen : t.p0.legClosed;
+    tag.className = 'tag ' + (armed[a] ? 'red' : 'ok');
+    $('v-leg'+a).textContent = armed[a] ? t.p0.legOpen : t.p0.legClosed;
+    $('v-leg'+a).className = 'tag ' + (armed[a] ? 'red' : 'ok');
+    $('v-leg'+a+'l').textContent = t.p0.legNames[a];
+  });
+
+  var msg = $('v-msg');
+  if(!picked.length){
+    msg.innerHTML = '<div class="callout"><p>'+esc(t.p0.empty)+'</p></div>';
+  } else if(legCount === 3){
+    msg.innerHTML = '<div class="callout red"><p>'+t.p0.complete+'</p></div>';
+  } else {
+    msg.innerHTML = '<div class="callout green"><p>'+t.p0.incomplete+'</p></div>';
+  }
+
+  var mit = $('v-mitig');
+  mit.innerHTML = '';
+  if(picked.length){
+    var h = document.createElement('h3');
+    h.textContent = t.p0.mitigTitle;
+    mit.appendChild(h);
+    [0,1,2].forEach(function(a){
+      if(!armed[a]) return;
+      var d = document.createElement('div');
+      d.className = 'mit';
+      d.innerHTML = '<span>'+esc(MITIG[LANG][a])+'</span>';
+      mit.appendChild(d);
+    });
+  }
+}
+
+/* ================================================================
+   PANEL 2 — OWASP ASI
+   ================================================================ */
+$('p1-eyebrow').textContent = t.p1.eyebrow;
+$('p1-title').textContent   = t.p1.title;
+$('p1-lead').textContent    = t.p1.lead;
+$('p1-note').textContent    = t.p1.note;
+
+var asiList = $('asi-list');
+ASI.forEach(function(a,i){
+  var c = a[LANG];
+  var d = document.createElement('div');
+  d.className = 'asi';
+  d.innerHTML =
+    '<button class="asi-h" type="button" aria-expanded="false">'
+    + '<span class="asi-n">'+esc(a.n)+'</span>'
+    + '<span class="asi-t">'+esc(c.t)+'</span>'
+    + '<span class="asi-x">+</span></button>'
+    + '<div class="asi-b"><p>'+esc(c.d)+'</p>'
+    + c.m.map(function(m){ return '<div class="mit"><span>'+esc(m)+'</span></div>'; }).join('')
+    + '</div>';
+  var btn = d.querySelector('.asi-h');
+  btn.onclick = function(){
+    var open = d.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
+  asiList.appendChild(d);
+});
+
+/* ================================================================
+   PANEL 3 — CHECKLIST
+   ================================================================ */
+$('p2-eyebrow').textContent = t.p2.eyebrow;
+$('p2-title').textContent   = t.p2.title;
+$('p2-lead').textContent    = t.p2.lead;
+$('p2-foot').textContent    = t.p2.foot;
+$('c-total').textContent    = t.p2.total;
+$('c-reset').textContent    = t.p2.reset;
+
+var STORE_KEY = 'wt-hardening-' + LANG;
+var groupsEl = $('chk-groups');
+[0,1].forEach(function(g){
+  var wrap = document.createElement('div');
+  wrap.className = 'card soft';
+  var items = '';
+  CHECKS.forEach(function(c,i){
+    if(c.g!==g) return;
+    items += '<label class="chk"><input type="checkbox" id="chk'+i+'" data-chk="'+i+'">'
+          +  '<span class="chk-t">'+esc(c[LANG])+'</span></label>';
+  });
+  wrap.innerHTML = '<h3>'+esc(t.p2.groups[g])+'</h3>'+items;
+  groupsEl.appendChild(wrap);
+});
+
+var saved = load(STORE_KEY);
+if(saved){
+  saved.split(',').forEach(function(i){ var el = $('chk'+i); if(el) el.checked = true; });
+}
+Array.prototype.slice.call(document.querySelectorAll('[data-chk]')).forEach(function(inp){
+  inp.onchange = updateChecklist;
+});
+$('c-reset').onclick = function(){
+  Array.prototype.slice.call(document.querySelectorAll('[data-chk]')).forEach(function(i){ i.checked = false; });
+  updateChecklist();
+};
+
+function updateChecklist(){
+  var done = [];
+  CHECKS.forEach(function(c,i){ if($('chk'+i).checked) done.push(i); });
+  var pct = Math.round(done.length / CHECKS.length * 100);
+  var b = band(t.p2.bands, pct);
+  $('c-score').textContent = done.length;
+  $('c-gauge').style.width = pct + '%';
+  $('c-gauge').style.background = bandColor(b.cls);
+  $('c-band').textContent = b.label + ' · ' + pct + '%';
+  $('c-band').className = 'tag ' + b.cls;
+  store(STORE_KEY, done.join(','));
+}
+
+/* ================================================================
+   INIT
+   ================================================================ */
+updateTrifecta();
+updateChecklist();
+
+function calcH(){ return Math.min(880, Math.max(640, Math.round(window.innerWidth * 0.78))); }
+function postH(){ try{ parent.postMessage({wtWidget:1, h:calcH()}, '*'); }catch(e){} }
+window.addEventListener('load', postH);
+window.addEventListener('resize', postH);
+postH();
+})();
+</script>
+</body>
+</html>
