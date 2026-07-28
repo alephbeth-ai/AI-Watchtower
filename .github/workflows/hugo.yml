@@ -31,22 +31,31 @@ jobs:
       # raises its minimum again.
       HUGO_VERSION: 0.146.0
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
+
+      - name: Ensure PaperMod theme
+        run: |
+          git submodule update --init --recursive || true
+          if [ ! -d "themes/PaperMod" ]; then
+            mkdir -p themes
+            git clone --depth 1 https://github.com/adityatelange/hugo-PaperMod.git themes/PaperMod
+          fi
+
       - name: Install Hugo CLI
         run: |
           wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
           && sudo dpkg -i ${{ runner.temp }}/hugo.deb
 
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          fetch-depth: 0
-
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
         with:
-          enablement: true
+          enablement: false
+        continue-on-error: true
 
       - name: Build with Hugo
         env:
@@ -54,10 +63,14 @@ jobs:
           HUGO_ENVIRONMENT: production
           TZ: Europe/Paris
         run: |
+          BASE_URL="${{ steps.pages.outputs.base_url }}"
+          if [ -z "$BASE_URL" ]; then
+            BASE_URL="https://alephbeth-ai.github.io/AI-Watchtower"
+          fi
           hugo \
             --gc \
             --minify \
-            --baseURL "${{ steps.pages.outputs.base_url }}/"
+            --baseURL "${BASE_URL}/"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
