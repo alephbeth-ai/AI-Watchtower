@@ -29,7 +29,7 @@ export const Footer: React.FC<FooterProps> = ({ lang }) => {
 
           <div className="flex items-center gap-4 text-xs font-medium text-[#6b6b66] dark:text-[#a3a39d]">
             <a
-              href="https://github.com/aleph-beth/AI-Watchtower"
+              href="https://github.com/alephbeth-ai/AI-Watchtower"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
@@ -50,7 +50,9 @@ export const Footer: React.FC<FooterProps> = ({ lang }) => {
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#6b6b66] dark:text-[#a3a39d]">
           <p>© {new Date().getFullYear()} AlephBeth. CC BY 4.0 Open Content & Research.</p>
           <p className="flex items-center gap-1">
-            Built with React, Vite & Tailwind CSS
+            {lang === 'en'
+              ? 'Built with React, Vite & Tailwind CSS'
+              : 'Construit avec React, Vite & Tailwind CSS'}
           </p>
         </div>
       </div>

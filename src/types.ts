@@ -12,6 +12,8 @@ export interface Post {
   content: string;
   readingTime?: number;
   featured?: boolean;
+  /** Shared across the FR/EN pair of the same article; links the two versions. */
+  translationKey?: string;
 }
 
 export interface SiteMeta {
