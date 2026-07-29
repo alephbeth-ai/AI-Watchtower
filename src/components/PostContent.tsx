@@ -27,8 +27,12 @@ export const PostContent: React.FC<PostContentProps> = ({ content }) => {
   });
 
   // Regular expressions for Hugo shortcodes
+  // The body and its closing tag are optional *as a pair*: widget/stat are
+  // self-closing, checklist/details wrap content. Making only the closing tag
+  // optional would let the lazy body match empty and leak the items into the
+  // surrounding markdown.
   const shortcodeRegex =
-    /\{\{<\s*(widget|checklist|details|stat)\s*([\s\S]*?)\s*>\}\}([\s\S]*?)(?:\{\{<\s*\/\1\s*>\}\})?/g;
+    /\{\{<\s*(widget|checklist|details|stat)\s*([\s\S]*?)\s*>\}\}(?:([\s\S]*?)\{\{<\s*\/\1\s*>\}\})?/g;
 
   let lastIndex = 0;
   let match: RegExpExecArray | null;
