@@ -48,12 +48,12 @@ export const InteractiveShowcase: React.FC<InteractiveShowcaseProps> = ({
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       {/* Header banner */}
-      <div className="p-8 rounded-3xl bg-gradient-to-br from-blue-900 to-slate-900 text-white shadow-xl mb-8 relative overflow-hidden">
-        <div className="absolute right-0 top-0 bottom-0 opacity-10 pointer-events-none flex items-center pr-8">
-          <Cpu className="w-96 h-96" />
+      <div className="p-8 rounded-3xl bg-gradient-to-br from-[#080d1a] via-[#0f172a] to-[#111827] text-white shadow-xl mb-8 relative overflow-hidden border border-cyan-500/20">
+        <div className="absolute -right-12 -bottom-12 opacity-15 pointer-events-none w-80 h-80 rounded-full overflow-hidden">
+          <img src="/logo.jpg" alt="" className="w-full h-full object-cover" />
         </div>
         <div className="relative z-10 max-w-2xl">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/30 mb-3">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 mb-3">
             <Sparkles className="w-3.5 h-3.5" />
             {lang === 'en' ? 'Interactive Visual Lab' : 'Laboratoire Visuel Interactif'}
           </span>
@@ -76,8 +76,8 @@ export const InteractiveShowcase: React.FC<InteractiveShowcaseProps> = ({
         const catWidgets = widgets.filter((w) => w.category === cat.key);
         return (
           <div key={cat.key} className="mb-8">
-            <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-[#6b6b66] dark:text-[#a3a39d] mb-3">
-              <CatIcon className="w-4 h-4" />
+            <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide font-mono text-slate-500 dark:text-slate-400 mb-3">
+              <CatIcon className="w-4 h-4 text-cyan-500" />
               {cat.label}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -91,32 +91,32 @@ export const InteractiveShowcase: React.FC<InteractiveShowcaseProps> = ({
                     onClick={() => selectWidget(w.id)}
                     className={`p-4 rounded-2xl border text-left transition-all ${
                       isSelected
-                        ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-500 dark:border-blue-500 shadow-sm'
-                        : 'bg-white dark:bg-[#1a1a18] border-black/10 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20'
+                        ? 'bg-cyan-50 dark:bg-cyan-950/40 border-cyan-500 dark:border-cyan-500 shadow-cyber-cyan'
+                        : 'bg-white dark:bg-[#0f172a] border-slate-200 dark:border-cyan-950 hover:border-cyan-500/50'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span
                         className={`p-2 rounded-xl ${
                           isSelected
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-[#f5f5f3] dark:bg-[#2a2a27] text-[#6b6b66] dark:text-[#a3a39d]'
+                            ? 'bg-cyan-600 text-white'
+                            : 'bg-slate-100 dark:bg-[#162032] text-slate-600 dark:text-slate-400'
                         }`}
                       >
                         <Icon className="w-4 h-4" />
                       </span>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/5 text-[#6b6b66] dark:text-[#a3a39d]">
+                      <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                         {w.badge}
                       </span>
                     </div>
                     <h3
                       className={`font-bold text-sm mb-1 ${
-                        isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-[#1a1a18] dark:text-[#ededeb]'
+                        isSelected ? 'text-cyan-700 dark:text-cyan-300' : 'text-slate-900 dark:text-slate-100'
                       }`}
                     >
                       {w.title}
                     </h3>
-                    <p className="text-xs text-[#6b6b66] dark:text-[#a3a39d] line-clamp-2">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
                       {w.description}
                     </p>
                   </button>
@@ -130,16 +130,16 @@ export const InteractiveShowcase: React.FC<InteractiveShowcaseProps> = ({
       {/* Embedded Active Widget */}
       <div
         ref={embedRef}
-        className="bg-white dark:bg-[#1a1a18] rounded-2xl p-6 border border-black/10 dark:border-white/10 shadow-sm scroll-mt-20"
+        className="bg-white dark:bg-[#0f172a] rounded-2xl p-6 border border-slate-200 dark:border-cyan-950 shadow-sm scroll-mt-20"
       >
-        <div className="mb-4 pb-4 border-b border-black/5 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="mb-4 pb-4 border-b border-slate-200 dark:border-cyan-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h2 className="text-lg font-bold text-[#1a1a18] dark:text-[#ededeb]">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
               {current.title}
             </h2>
-            <p className="text-xs font-mono text-[#6b6b66] dark:text-[#a3a39d]">{current.paper}</p>
+            <p className="text-xs font-mono text-slate-500 dark:text-slate-400">{current.paper}</p>
           </div>
-          <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+          <span className="text-xs text-cyan-600 dark:text-cyan-400 font-semibold font-mono">
             {current.hint ||
               (lang === 'en'
                 ? 'Click steps or tokens to step through'
@@ -154,8 +154,8 @@ export const InteractiveShowcase: React.FC<InteractiveShowcaseProps> = ({
           variant={current.variant}
         />
 
-        <div className="mt-4 p-4 rounded-xl bg-[#f5f5f3] dark:bg-[#242422] text-xs text-[#6b6b66] dark:text-[#a3a39d] flex items-start gap-3">
-          <HelpCircle className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+        <div className="mt-4 p-4 rounded-xl bg-slate-50 dark:bg-[#162032] text-xs text-slate-600 dark:text-slate-300 flex items-start gap-3 border border-slate-200/60 dark:border-cyan-950">
+          <HelpCircle className="w-4 h-4 text-cyan-500 flex-shrink-0 mt-0.5" />
           <p className="leading-relaxed">
             {current.description}
           </p>
