@@ -251,53 +251,6 @@ export function App() {
                   </div>
                 </div>
 
-                {/* Every interactive tool, straight from the homepage */}
-                <div className="relative z-10 mt-8 pt-8 border-t border-slate-200 dark:border-cyan-950/80">
-                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                    <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono">
-                      <Cpu className="w-3.5 h-3.5 text-cyan-500" />
-                      {lang === 'en' ? 'Interactive tools' : 'Outils interactifs'}
-                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-100 dark:bg-cyan-950/80 text-cyan-800 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-800">
-                        {widgets.length}
-                      </span>
-                    </h2>
-                    <button
-                      onClick={() => openWidget(activeWidgetId)}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 dark:text-cyan-400 hover:gap-2 transition-all"
-                    >
-                      {lang === 'en' ? 'Open the full lab' : 'Ouvrir le labo complet'}
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {widgets.map((w) => {
-                      const Icon = w.icon;
-                      return (
-                        <button
-                          key={w.id}
-                          onClick={() => openWidget(w.id)}
-                          className="p-4 rounded-2xl text-left bg-slate-50 dark:bg-[#162032] border border-slate-200/80 dark:border-cyan-950 hover:border-cyan-500/60 hover:shadow-cyber-cyan transition-all group"
-                        >
-                          <div className="flex items-center justify-between gap-2 mb-2">
-                            <span className="p-2 rounded-xl bg-white dark:bg-[#0f172a] text-cyan-600 dark:text-cyan-400 border border-slate-200 dark:border-cyan-900/40 group-hover:bg-cyan-500 group-hover:text-white transition-colors">
-                              <Icon className="w-4 h-4" />
-                            </span>
-                            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-200/60 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 text-right">
-                              {w.badge}
-                            </span>
-                          </div>
-                          <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors mb-1">
-                            {w.shortTitle}
-                          </h3>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                            {w.description}
-                          </p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
               </section>
             )}
 
