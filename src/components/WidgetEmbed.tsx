@@ -68,14 +68,8 @@ export const WidgetEmbed: React.FC<WidgetEmbedProps> = ({
     }
   }, []);
 
-  // Normalize src to ensure it respects Vite's BASE_URL (crucial for GitHub Pages subpaths)
-  const normalizedSrc = (() => {
-    if (!src) return '';
-    if (src.startsWith('http://') || src.startsWith('https://')) return src;
-    const cleanSrc = src.startsWith('/') ? src.slice(1) : src;
-    const baseUrl = import.meta.env.BASE_URL || './';
-    return baseUrl.endsWith('/') ? `${baseUrl}${cleanSrc}` : `${baseUrl}/${cleanSrc}`;
-  })();
+  // Normalize src to ensure it starts with /
+  const normalizedSrc = src.startsWith('/') ? src : `/${src}`;
 
   const isApp = variant === 'app';
 
