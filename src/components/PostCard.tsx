@@ -11,28 +11,31 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onSelect }) => {
   return (
     <article
       onClick={() => onSelect(post)}
-      className="group relative flex flex-col justify-between p-6 bg-white dark:bg-[#1a1a18] rounded-2xl border border-black/10 dark:border-white/10 hover:border-blue-500/50 dark:hover:border-blue-500/50 shadow-sm hover:shadow-md transition-all cursor-pointer"
+      className="group relative flex flex-col justify-between p-6 bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-cyan-950/60 hover:border-cyan-500/60 dark:hover:border-cyan-500/60 shadow-sm hover:shadow-cyber-cyan transition-all cursor-pointer overflow-hidden"
     >
+      {/* Top subtle glow line on hover */}
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-400 via-teal-400 to-rose-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+
       <div>
         {/* Category & Featured badge */}
         <div className="flex items-center justify-between gap-2 mb-3">
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/60">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold font-mono bg-cyan-50 dark:bg-cyan-950/70 text-cyan-800 dark:text-cyan-300 border border-cyan-200/80 dark:border-cyan-800/60">
             {post.categories[0] || 'Article'}
           </span>
           {post.featured && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60">
-              Interactive / Featured
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/60">
+              {post.lang === 'en' ? 'Interactive' : 'Interactif'}
             </span>
           )}
         </div>
 
         {/* Title */}
-        <h2 className="text-lg font-bold text-[#1a1a18] dark:text-[#ededeb] group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2 leading-snug mb-2.5">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors line-clamp-2 leading-snug mb-2.5">
           {post.title}
         </h2>
 
         {/* Summary */}
-        <p className="text-sm text-[#6b6b66] dark:text-[#a3a39d] line-clamp-3 leading-relaxed mb-4">
+        <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed mb-4">
           {post.description}
         </p>
       </div>
@@ -44,9 +47,9 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onSelect }) => {
             {post.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono rounded bg-[#f5f5f3] dark:bg-[#242422] text-[#6b6b66] dark:text-[#a3a39d]"
+                className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono rounded bg-slate-100 dark:bg-[#162032] text-slate-600 dark:text-slate-400 border border-slate-200/50 dark:border-cyan-950"
               >
-                <Tag className="w-2.5 h-2.5 opacity-60" />
+                <Tag className="w-2.5 h-2.5 opacity-60 text-cyan-500" />
                 {tag}
               </span>
             ))}
@@ -54,7 +57,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onSelect }) => {
         )}
 
         {/* Footer Meta */}
-        <div className="pt-3 border-t border-black/5 dark:border-white/5 flex items-center justify-between text-xs text-[#6b6b66] dark:text-[#a3a39d]">
+        <div className="pt-3 border-t border-slate-200/60 dark:border-cyan-950/60 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
               <Calendar className="w-3.5 h-3.5" />
@@ -68,8 +71,8 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onSelect }) => {
             )}
           </div>
 
-          <span className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium group-hover:translate-x-1 transition-transform">
-            Read <ArrowRight className="w-3.5 h-3.5" />
+          <span className="inline-flex items-center gap-1 text-cyan-600 dark:text-cyan-400 font-semibold group-hover:translate-x-1 transition-transform">
+            {post.lang === 'en' ? 'Read' : 'Lire'} <ArrowRight className="w-3.5 h-3.5" />
           </span>
         </div>
       </div>

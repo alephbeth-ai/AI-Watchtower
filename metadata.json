@@ -1,6 +1,6 @@
 {
-  "name": "AI Watchtower",
-  "description": "Critical watch on AI security — threat models, poisoning, agents, hardening playbooks.",
+  "name": "Aleph Beth",
+  "description": "Sécurité & Ingénierie IA Défensive — אב · أب — threat models, poisoning, agents, hardening playbooks.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
