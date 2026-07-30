@@ -24,7 +24,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onSelect }) => {
           </span>
           {post.featured && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/60">
-              {post.lang === 'en' ? 'Interactive' : 'Interactif'}
+              {post.lang === 'en' ? 'Interactive / Featured' : 'Interactif / À la une'}
             </span>
           )}
         </div>

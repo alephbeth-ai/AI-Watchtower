@@ -73,6 +73,8 @@ export const WidgetEmbed: React.FC<WidgetEmbedProps> = ({
 
   const isApp = variant === 'app';
 
+  const isApp = variant === 'app';
+
   return (
     <div
       ref={containerRef}

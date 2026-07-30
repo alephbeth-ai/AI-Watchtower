@@ -54,10 +54,12 @@ export const Footer: React.FC<FooterProps> = ({ lang }) => {
 
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
           <p>© {new Date().getFullYear()} AlephBeth. CC BY 4.0 Open Content & Research.</p>
+
           <p className="flex items-center gap-1 font-mono">
             {lang === 'en'
               ? 'Defensive AI & Security Research'
               : 'Recherche en Sécurité IA Défensive'}
+
           </p>
         </div>
       </div>
