@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { marked } from 'marked';
 import { WidgetEmbed } from './WidgetEmbed';
 import { Checklist } from './Checklist';
@@ -9,7 +9,91 @@ interface PostContentProps {
   content: string;
 }
 
+// Mermaid is loaded on demand from the CDN, only on pages that contain a
+// ```mermaid fence, mirroring the Hugo render hook used on the github.io
+// build. Typed as `string` (not a literal) so TypeScript does not try to
+// resolve the URL as a module; Vite leaves the import to the browser.
+const MERMAID_CDN: string = 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Render ```mermaid fences as <pre class="mermaid"> holding the diagram
+// source; every other fence falls through (return false) to marked's default
+// code renderer.
+marked.use({
+  renderer: {
+    code(token) {
+      if ((token.lang || '').trim().toLowerCase() === 'mermaid') {
+        return `<pre class="mermaid" aria-label="diagram">${escapeHtml(token.text)}</pre>\n`;
+      }
+      return false;
+    },
+  },
+});
+
+const isDark = (): boolean => document.documentElement.classList.contains('dark');
+
+async function renderMermaid(root: HTMLElement): Promise<void> {
+  const nodes = Array.from(root.querySelectorAll<HTMLElement>('pre.mermaid'));
+  if (nodes.length === 0) return;
+
+  const mod = await import(/* @vite-ignore */ MERMAID_CDN);
+  const mermaid = mod.default;
+
+  // Keep the original source on the element so the diagram can be rendered
+  // again with the other palette when the theme toggles (mermaid.run replaces
+  // the element's content with the SVG).
+  for (const el of nodes) {
+    if (el.dataset.source === undefined) {
+      el.dataset.source = el.textContent ?? '';
+    }
+    el.textContent = el.dataset.source;
+    el.removeAttribute('data-processed');
+  }
+
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: 'strict',
+    theme: isDark() ? 'dark' : 'neutral',
+    fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+  });
+  await mermaid.run({ nodes });
+}
+
 export const PostContent: React.FC<PostContentProps> = ({ content }) => {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // Render diagrams after the HTML is in the DOM, and again whenever the
+  // theme class on <html> changes.
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    let cancelled = false;
+    const run = () => {
+      if (cancelled) return;
+      renderMermaid(root).catch((err) => {
+        console.error('Mermaid rendering failed', err);
+      });
+    };
+
+    run();
+    const observer = new MutationObserver(run);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
+  }, [content]);
+
   // Parse shortcodes into structured placeholders or JSX blocks
   // Shortcodes to process:
   // 1. {{< widget src="..." title="..." >}}
@@ -18,7 +102,6 @@ export const PostContent: React.FC<PostContentProps> = ({ content }) => {
   // 4. {{< stat value="..." prefix="..." suffix="..." sep="..." >}}
 
   const elements: React.ReactNode[] = [];
-  let remainingText = content;
 
   // Configure marked options
   marked.setOptions({
@@ -122,5 +205,9 @@ export const PostContent: React.FC<PostContentProps> = ({ content }) => {
     );
   }
 
-  return <div className="space-y-6 post-content-area">{elements}</div>;
+  return (
+    <div ref={rootRef} className="space-y-6 post-content-area">
+      {elements}
+    </div>
+  );
 };
