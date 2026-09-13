@@ -1,6 +1,10 @@
 import React from 'react';
 import { Sun, Moon, Search, Cpu, BookOpen, Mail, Sparkles } from 'lucide-react';
 import { Language } from '../types';
+import { Route } from '../router';
+import { Link } from './Link';
+
+type Tab = 'articles' | 'interactive' | 'contact';
 
 interface HeaderProps {
   lang: Language;
@@ -9,8 +13,15 @@ interface HeaderProps {
   onThemeToggle: () => void;
   searchQuery: string;
   onSearchChange: (q: string) => void;
-  activeTab: 'articles' | 'interactive' | 'contact';
-  onTabChange: (tab: 'articles' | 'interactive' | 'contact') => void;
+  activeTab: Tab;
+  /** Called when a tab link is clicked; navigation itself is handled by the link. */
+  onTabChange: (tab: Tab) => void;
+}
+
+function tabRoute(tab: Tab, lang: Language): Route {
+  if (tab === 'interactive') return { kind: 'lab', lang };
+  if (tab === 'contact') return { kind: 'contact', lang };
+  return { kind: 'home', lang };
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -23,13 +34,26 @@ export const Header: React.FC<HeaderProps> = ({
   activeTab,
   onTabChange,
 }) => {
+  const tabClass = (tab: Tab) =>
+    `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all no-underline ${
+      activeTab === tab
+        ? 'bg-white dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-700/60 shadow-sm'
+        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+    }`;
+
+  const mobileTabClass = (tab: Tab) =>
+    `flex items-center gap-1 font-medium no-underline ${
+      activeTab === tab ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-500 dark:text-slate-400'
+    }`;
+
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-white/85 dark:bg-[#080d1a]/85 border-b border-cyan-500/15 dark:border-cyan-500/20 transition-colors">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
         {/* Brand logo & title */}
-        <div
+        <Link
+          to={tabRoute('articles', lang)}
           onClick={() => onTabChange('articles')}
-          className="flex items-center gap-3 cursor-pointer group"
+          className="flex items-center gap-3 cursor-pointer group no-underline"
         >
           {/* Logo badge with cyan glow ring */}
           <div className="relative w-10 h-10 rounded-xl overflow-hidden p-0.5 bg-gradient-to-br from-cyan-400 via-teal-500 to-blue-600 shadow-cyber-cyan group-hover:scale-105 transition-transform flex-shrink-0">
@@ -54,46 +78,25 @@ export const Header: React.FC<HeaderProps> = ({
               {lang === 'en' ? 'Defensive AI & Security Engineering' : 'Sécurité & Ingénierie IA Défensive'}
             </p>
           </div>
-        </div>
+        </Link>
 
         {/* Navigation Tabs */}
         <nav className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-[#0f172a] p-1 rounded-xl border border-slate-200 dark:border-cyan-900/40">
-          <button
-            onClick={() => onTabChange('articles')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'articles'
-                ? 'bg-white dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-700/60 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
+          <Link to={tabRoute('articles', lang)} onClick={() => onTabChange('articles')} className={tabClass('articles')}>
             <BookOpen className="w-3.5 h-3.5" />
-            {lang === 'en' ? 'Articles' : 'Articles'}
-          </button>
+            Articles
+          </Link>
 
-          <button
-            onClick={() => onTabChange('interactive')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'interactive'
-                ? 'bg-white dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-700/60 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
+          <Link to={tabRoute('interactive', lang)} onClick={() => onTabChange('interactive')} className={tabClass('interactive')}>
             <Cpu className="w-3.5 h-3.5 text-cyan-500" />
             <span>{lang === 'en' ? 'Interactive Lab' : 'Labo Interactif'}</span>
             <span className="flex h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping"></span>
-          </button>
+          </Link>
 
-          <button
-            onClick={() => onTabChange('contact')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              activeTab === 'contact'
-                ? 'bg-white dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-700/60 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
+          <Link to={tabRoute('contact', lang)} onClick={() => onTabChange('contact')} className={tabClass('contact')}>
             <Mail className="w-3.5 h-3.5" />
-            {lang === 'en' ? 'Contact' : 'Contact'}
-          </button>
+            Contact
+          </Link>
         </nav>
 
         {/* Search bar & Controls */}
@@ -113,6 +116,8 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center bg-slate-100 dark:bg-[#0f172a] p-0.5 rounded-lg border border-slate-200 dark:border-cyan-900/40">
             <button
               onClick={() => onLanguageChange('en')}
+              lang="en"
+              aria-label="English"
               className={`px-2 py-1 text-xs font-bold font-mono rounded-md transition-all ${
                 lang === 'en'
                   ? 'bg-white dark:bg-cyan-950 text-cyan-600 dark:text-cyan-400 shadow-sm'
@@ -123,6 +128,8 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
             <button
               onClick={() => onLanguageChange('fr')}
+              lang="fr"
+              aria-label="Français"
               className={`px-2 py-1 text-xs font-bold font-mono rounded-md transition-all ${
                 lang === 'fr'
                   ? 'bg-white dark:bg-cyan-950 text-cyan-600 dark:text-cyan-400 shadow-sm'
@@ -146,33 +153,18 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Mobile Subnav */}
       <div className="md:hidden flex items-center justify-around px-4 py-2 bg-slate-50 dark:bg-[#0b1120] border-t border-slate-200 dark:border-cyan-950 text-xs">
-        <button
-          onClick={() => onTabChange('articles')}
-          className={`flex items-center gap-1 font-medium ${
-            activeTab === 'articles' ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-500 dark:text-slate-400'
-          }`}
-        >
+        <Link to={tabRoute('articles', lang)} onClick={() => onTabChange('articles')} className={mobileTabClass('articles')}>
           <BookOpen className="w-3.5 h-3.5" />
           Articles
-        </button>
-        <button
-          onClick={() => onTabChange('interactive')}
-          className={`flex items-center gap-1 font-medium ${
-            activeTab === 'interactive' ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-500 dark:text-slate-400'
-          }`}
-        >
+        </Link>
+        <Link to={tabRoute('interactive', lang)} onClick={() => onTabChange('interactive')} className={mobileTabClass('interactive')}>
           <Sparkles className="w-3.5 h-3.5 text-cyan-500" />
           {lang === 'en' ? 'Lab' : 'Labo'}
-        </button>
-        <button
-          onClick={() => onTabChange('contact')}
-          className={`flex items-center gap-1 font-medium ${
-            activeTab === 'contact' ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-500 dark:text-slate-400'
-          }`}
-        >
+        </Link>
+        <Link to={tabRoute('contact', lang)} onClick={() => onTabChange('contact')} className={mobileTabClass('contact')}>
           <Mail className="w-3.5 h-3.5" />
           Contact
-        </button>
+        </Link>
       </div>
     </header>
   );

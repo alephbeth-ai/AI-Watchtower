@@ -1,0 +1,18 @@
+{
+  "url": "https://www.alephbeth.ai",
+  "name": "Aleph Beth",
+  "en": {
+    "title": "Aleph Beth — Defensive AI & Security Engineering",
+    "description": "Deep-dives into prompt injection, MCP server security, LLM internals, and actionable defensive checklists for production systems.",
+    "lab": "Interactive Lab",
+    "contact": "Contact",
+    "notFound": "Page not found"
+  },
+  "fr": {
+    "title": "Aleph Beth — Sécurité & Ingénierie IA Défensive",
+    "description": "Analyses approfondies sur l'injection de prompt, la sécurité des serveurs MCP, le fonctionnement interne des LLM et des guides de durcissement.",
+    "lab": "Labo interactif",
+    "contact": "Contact",
+    "notFound": "Page introuvable"
+  }
+}
