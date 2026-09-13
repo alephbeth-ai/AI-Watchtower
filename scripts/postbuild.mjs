@@ -105,13 +105,41 @@ function writeFile(relativePath, content) {
 
 // --- HTML pages --------------------------------------------------------------
 
-function render({ title, description, lang, path, alternates }) {
+const OG_IMAGE = { path: '/og-image.jpg', width: 1200, height: 630, alt: 'Aleph Beth — Defensive AI & Security Engineering' };
+const locale = (lang) => (lang === 'fr' ? 'fr_FR' : 'en_US');
+
+function render({ title, description, lang, path, alternates, article }) {
   const feedTitle = 'Aleph Beth — Articles (RSS)';
+  const meta = (attr, value) => `<meta ${attr} content="${escapeXml(value)}" />`;
   const head = [
     `<meta name="description" content="${escapeXml(description)}" />`,
     `<link rel="canonical" href="${absolute(path)}" />`,
     ...alternates.map((a) => `<link rel="alternate" hreflang="${a.lang}" href="${absolute(a.path)}" />`),
     `<link rel="alternate" type="application/rss+xml" title="${escapeXml(feedTitle)}" href="${absolute(feedPath(lang))}" />`,
+    // Open Graph: what LinkedIn, Slack, Discord, Mastodon, WhatsApp… show for a pasted link.
+    meta('property="og:site_name"', site.name),
+    meta('property="og:type"', article ? 'article' : 'website'),
+    meta('property="og:title"', title),
+    meta('property="og:description"', description),
+    meta('property="og:url"', absolute(path)),
+    meta('property="og:locale"', locale(lang)),
+    ...alternates.filter((a) => a.lang !== lang).map((a) => meta('property="og:locale:alternate"', locale(a.lang))),
+    meta('property="og:image"', absolute(OG_IMAGE.path)),
+    meta('property="og:image:width"', String(OG_IMAGE.width)),
+    meta('property="og:image:height"', String(OG_IMAGE.height)),
+    meta('property="og:image:alt"', OG_IMAGE.alt),
+    ...(article
+      ? [
+          meta('property="article:published_time"', article.date),
+          meta('property="article:modified_time"', article.lastmod),
+          ...article.tags.map((tag) => meta('property="article:tag"', tag)),
+        ]
+      : []),
+    // Twitter / X card
+    meta('name="twitter:card"', 'summary_large_image'),
+    meta('name="twitter:title"', title),
+    meta('name="twitter:description"', description),
+    meta('name="twitter:image"', absolute(OG_IMAGE.path)),
   ]
     .map((line) => `    ${line}`)
     .join('\n');
@@ -120,6 +148,7 @@ function render({ title, description, lang, path, alternates }) {
     .replace(/<html lang="[^"]*">/, `<html lang="${lang}">`)
     .replace(/<title>[\s\S]*?<\/title>/, `<title>${escapeXml(title)}</title>`)
     .replace(/\s*<meta name="description"[^>]*>/g, '')
+    .replace(/\s*<meta (property="og:|name="twitter:)[^>]*>/g, '')
     .replace(/\s*<link rel="canonical"[^>]*>/g, '')
     .replace('</head>', `${head}\n  </head>`);
 }
@@ -160,6 +189,7 @@ for (const post of posts) {
     path: post.path,
     lastmod: post.lastmod,
     alternates: translation ? pair(post.lang, post.path, translation.path) : [{ lang: post.lang, path: post.path }],
+    article: { date: post.date, lastmod: post.lastmod, tags: post.tags },
   });
 }
 
