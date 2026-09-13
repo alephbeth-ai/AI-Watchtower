@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Language, Post } from './types';
-import { getPostsByLang, getTranslation } from './data/posts';
+import { Language } from './types';
+import { getPostsByLang, getPostBySlug, getTranslation } from './data/posts';
 import { DEFAULT_WIDGET_ID, getWidgets } from './data/widgets';
+import { useRoute, navigate } from './router';
+import { pageMetaFor, applyPageMeta } from './seo';
+import site from './data/site.json';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { PostCard } from './components/PostCard';
 import { PostView } from './components/PostView';
 import { InteractiveShowcase } from './components/InteractiveShowcase';
 import { ContactView } from './components/ContactView';
-import { Shield, Sparkles, Filter, Search, ArrowRight, Cpu } from 'lucide-react';
+import { Link } from './components/Link';
+import { Sparkles, Filter, Search, ArrowRight, Cpu } from 'lucide-react';
 
 export function App() {
-  const [lang, setLang] = useState<Language>('en');
+  // The URL is the source of truth for language, section, article and widget.
+  const route = useRoute();
+  const lang: Language = route.lang;
+
   const [isDark, setIsDark] = useState<boolean>(() => {
     const saved = localStorage.getItem('theme');
     if (saved) {
@@ -20,11 +27,14 @@ export function App() {
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'articles' | 'interactive' | 'contact'>('articles');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [activeWidgetId, setActiveWidgetId] = useState<string>(DEFAULT_WIDGET_ID);
+  const [lastWidgetId, setLastWidgetId] = useState<string>(DEFAULT_WIDGET_ID);
   const [widgetPickedFromHero, setWidgetPickedFromHero] = useState<boolean>(false);
+
+  const selectedPost = route.kind === 'post' ? getPostBySlug(route.slug, route.lang) ?? null : null;
+  const activeTab: 'articles' | 'interactive' | 'contact' =
+    route.kind === 'lab' ? 'interactive' : route.kind === 'contact' ? 'contact' : 'articles';
+  const activeWidgetId = route.kind === 'lab' && route.widgetId ? route.widgetId : lastWidgetId;
 
   // Sync dark class on html root and persist preference
   useEffect(() => {
@@ -38,6 +48,18 @@ export function App() {
       localStorage.setItem('theme', 'light');
     }
   }, [isDark]);
+
+  // Keep <head> (title, description, lang, canonical, hreflang) in step with the URL
+  useEffect(() => {
+    applyPageMeta(pageMetaFor(route));
+  }, [route]);
+
+  // A slug reached under the wrong language prefix redirects to its own language
+  useEffect(() => {
+    if (route.kind === 'post' && selectedPost && selectedPost.lang !== route.lang) {
+      navigate({ kind: 'post', lang: selectedPost.lang, slug: selectedPost.slug }, { replace: true });
+    }
+  }, [route, selectedPost]);
 
   // Get posts for selected language
   const posts = getPostsByLang(lang);
@@ -61,12 +83,19 @@ export function App() {
   });
 
   const handleLanguageChange = (newLang: Language) => {
-    setLang(newLang);
-    if (selectedPost) {
+    if (newLang === lang) return;
+    if (route.kind === 'post') {
       // Stay on the same article in the other language; fall back to the list
       // when that article has no counterpart.
-      setSelectedPost(getTranslation(selectedPost, newLang) || null);
+      const translation = selectedPost ? getTranslation(selectedPost, newLang) : undefined;
+      navigate(translation ? { kind: 'post', lang: newLang, slug: translation.slug } : { kind: 'home', lang: newLang });
+      return;
     }
+    if (route.kind === 'notfound') {
+      navigate({ kind: 'home', lang: newLang });
+      return;
+    }
+    navigate({ ...route, lang: newLang });
   };
 
   const featuredPost = posts.find(
@@ -76,12 +105,12 @@ export function App() {
   const widgets = getWidgets(lang);
 
   const openWidget = (widgetId: string) => {
-    setActiveWidgetId(widgetId);
+    setLastWidgetId(widgetId);
     setWidgetPickedFromHero(true);
-    setSelectedPost(null);
-    setActiveTab('interactive');
-    window.scrollTo({ top: 0 });
+    navigate({ kind: 'lab', lang, widgetId });
   };
+
+  const homeRoute: Route = { kind: 'home', lang };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f8fafc] dark:bg-[#080d1a] text-[#0f172a] dark:text-[#f1f5f9] transition-colors font-sans">
@@ -93,28 +122,25 @@ export function App() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         activeTab={activeTab}
-        onTabChange={(tab) => {
-          setActiveTab(tab);
-          setSelectedPost(null);
-          setWidgetPickedFromHero(false);
-        }}
+        onTabChange={() => setWidgetPickedFromHero(false)}
       />
 
       <div className="flex-1">
-        {selectedPost ? (
-          <PostView
-            post={selectedPost}
-            lang={lang}
-            onBack={() => setSelectedPost(null)}
-            onSelectPost={(p) => setSelectedPost(p)}
-            onLanguageChange={handleLanguageChange}
-          />
+        {route.kind === 'post' && !selectedPost ? (
+          <NotFound lang={lang} />
+        ) : route.kind === 'notfound' ? (
+          <NotFound lang={lang} />
+        ) : selectedPost ? (
+          <PostView post={selectedPost} lang={lang} />
         ) : activeTab === 'interactive' ? (
           <InteractiveShowcase
             lang={lang}
             initialWidgetId={activeWidgetId}
             focusWidget={widgetPickedFromHero}
-            onWidgetChange={setActiveWidgetId}
+            onWidgetChange={(id) => {
+              setLastWidgetId(id);
+              navigate({ kind: 'lab', lang, widgetId: id }, { replace: true });
+            }}
           />
         ) : activeTab === 'contact' ? (
           <ContactView lang={lang} />
@@ -153,16 +179,14 @@ export function App() {
                     </h1>
 
                     <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
-                      {lang === 'en'
-                        ? 'Deep-dives into prompt injections, MCP server security, LLM internals, and actionable defensive checklists for production systems.'
-                        : 'Analyses approfondies sur l\'injection de prompt, la sécurité des serveurs MCP, le fonctionnement interne des LLM et des guides de durcissement.'}
+                      {site[lang].description}
                     </p>
 
                     {/* Featured Post Card Banner */}
                     {featuredPost && (
-                      <div
-                        onClick={() => setSelectedPost(featuredPost)}
-                        className="p-4 rounded-2xl bg-slate-50 dark:bg-[#162032] border border-slate-200 dark:border-cyan-900/40 hover:border-cyan-500/60 cursor-pointer transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group hover:shadow-cyber-cyan"
+                      <Link
+                        to={{ kind: 'post', lang: featuredPost.lang, slug: featuredPost.slug }}
+                        className="p-4 rounded-2xl bg-slate-50 dark:bg-[#162032] border border-slate-200 dark:border-cyan-900/40 hover:border-cyan-500/60 cursor-pointer transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group hover:shadow-cyber-cyan no-underline"
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -180,7 +204,7 @@ export function App() {
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 dark:text-cyan-400 group-hover:translate-x-1 transition-transform">
                           {lang === 'en' ? 'Explore Diagrams' : 'Voir Les Schémas'} <ArrowRight className="w-3.5 h-3.5" />
                         </span>
-                      </div>
+                      </Link>
                     )}
                   </div>
 
@@ -213,23 +237,25 @@ export function App() {
                         {widgets.length}
                       </span>
                     </h2>
-                    <button
-                      onClick={() => openWidget(activeWidgetId)}
+                    <Link
+                      to={{ kind: 'lab', lang, widgetId: activeWidgetId }}
+                      onClick={() => setWidgetPickedFromHero(true)}
                       className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 dark:text-cyan-400 hover:gap-2 transition-all"
                     >
                       {lang === 'en' ? 'Open the full lab' : 'Ouvrir le labo complet'}
                       <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                    </Link>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {widgets.map((w) => {
                       const Icon = w.icon;
                       return (
-                        <button
+                        <Link
                           key={w.id}
+                          to={{ kind: 'lab', lang, widgetId: w.id }}
                           onClick={() => openWidget(w.id)}
-                          className="p-4 rounded-2xl text-left bg-slate-50 dark:bg-[#162032] border border-slate-200/80 dark:border-cyan-950 hover:border-cyan-500/60 hover:shadow-cyber-cyan transition-all group"
+                          className="p-4 rounded-2xl text-left bg-slate-50 dark:bg-[#162032] border border-slate-200/80 dark:border-cyan-950 hover:border-cyan-500/60 hover:shadow-cyber-cyan transition-all group no-underline"
                         >
                           <div className="flex items-center justify-between gap-2 mb-2">
                             <span className="p-2 rounded-xl bg-white dark:bg-[#0f172a] text-cyan-600 dark:text-cyan-400 border border-slate-200 dark:border-cyan-900/40 group-hover:bg-cyan-500 group-hover:text-white transition-colors">
@@ -245,7 +271,7 @@ export function App() {
                           <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
                             {w.description}
                           </p>
-                        </button>
+                        </Link>
                       );
                     })}
                   </div>
@@ -292,7 +318,7 @@ export function App() {
             {/* Articles Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPosts.map((post) => (
-                <PostCard key={post.id} post={post} onSelect={(p) => setSelectedPost(p)} />
+                <PostCard key={post.id} post={post} />
               ))}
             </div>
 
@@ -320,3 +346,24 @@ export function App() {
     </div>
   );
 }
+
+const NotFound: React.FC<{ lang: Language }> = ({ lang }) => (
+  <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-16 pb-24 text-center">
+    <p className="text-xs font-mono font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 mb-3">404</p>
+    <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mb-4">
+      {site[lang].notFound}
+    </h1>
+    <p className="text-sm text-slate-600 dark:text-slate-400 mb-8">
+      {lang === 'en'
+        ? 'This address does not match any article or section of the site.'
+        : "Cette adresse ne correspond à aucun article ni aucune section du site."}
+    </p>
+    <Link
+      to={{ kind: 'home', lang }}
+      className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold bg-cyan-600 text-white rounded-xl shadow-sm hover:bg-cyan-500 transition-colors"
+    >
+      <ArrowRight className="w-3.5 h-3.5 rotate-180" />
+      {lang === 'en' ? 'Back to articles' : 'Retour aux articles'}
+    </Link>
+  </main>
+);

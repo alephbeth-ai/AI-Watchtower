@@ -7,28 +7,19 @@ import {
   Share2,
   Check,
   Globe,
-  BookOpen,
   List,
 } from 'lucide-react';
 import { Post, Language } from '../types';
 import { PostContent } from './PostContent';
+import { Link } from './Link';
 import { getTranslation } from '../data/posts';
 
 interface PostViewProps {
   post: Post;
   lang: Language;
-  onBack: () => void;
-  onSelectPost: (post: Post) => void;
-  onLanguageChange: (lang: Language) => void;
 }
 
-export const PostView: React.FC<PostViewProps> = ({
-  post,
-  lang,
-  onBack,
-  onSelectPost,
-  onLanguageChange,
-}) => {
+export const PostView: React.FC<PostViewProps> = ({ post, lang }) => {
   const [scrollProgress, setScrollProgress] = useState<number>(0);
   const [copied, setCopied] = useState<boolean>(false);
   const [headings, setHeadings] = useState<{ id: string; text: string; level: number }[]>([]);
@@ -82,26 +73,24 @@ export const PostView: React.FC<PostViewProps> = ({
       <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8">
         {/* Top bar controls */}
         <div className="flex items-center justify-between gap-4 mb-8">
-          <button
-            onClick={onBack}
-            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 bg-white dark:bg-[#0f172a] hover:bg-slate-100 dark:hover:bg-[#162032] border border-slate-200 dark:border-cyan-950 rounded-xl transition-colors shadow-sm"
+          <Link
+            to={{ kind: 'home', lang }}
+            className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 bg-white dark:bg-[#0f172a] hover:bg-slate-100 dark:hover:bg-[#162032] border border-slate-200 dark:border-cyan-950 rounded-xl transition-colors shadow-sm no-underline"
           >
             <ArrowLeft className="w-4 h-4 text-cyan-500" />
             {lang === 'en' ? 'Back to articles' : 'Retour aux articles'}
-          </button>
+          </Link>
 
           <div className="flex items-center gap-2">
             {translatedPost ? (
-              <button
-                onClick={() => {
-                  onLanguageChange(counterpartLang);
-                  onSelectPost(translatedPost);
-                }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/60 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 border border-cyan-200 dark:border-cyan-800 rounded-xl transition-colors"
+              <Link
+                to={{ kind: 'post', lang: counterpartLang, slug: translatedPost.slug }}
+                hrefLang={counterpartLang}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/60 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 border border-cyan-200 dark:border-cyan-800 rounded-xl transition-colors no-underline"
               >
                 <Globe className="w-3.5 h-3.5" />
                 <span>{lang === 'en' ? 'Read in French' : 'Lire en anglais'}</span>
-              </button>
+              </Link>
             ) : (
               <span
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#0f172a] border border-slate-200 dark:border-cyan-950 rounded-xl"
