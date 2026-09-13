@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Language } from './types';
 import { getPostsByLang, getPostBySlug, getTranslation } from './data/posts';
+import { groupPostsByTheme, themeStyle } from './data/themes';
 import { DEFAULT_WIDGET_ID, getWidgets } from './data/widgets';
 import { useRoute, navigate } from './router';
 import { pageMetaFor, applyPageMeta } from './seo';
@@ -313,12 +314,34 @@ export function App() {
               ))}
             </div>
 
-            {/* Articles Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredPosts.map((post) => (
-                <PostCard key={post.id} post={post} />
-              ))}
-            </div>
+            {/* Articles: grouped by editorial theme on the default view, flat grid while filtering */}
+            {!searchQuery && selectedCategory === 'all' ? (
+              groupPostsByTheme(filteredPosts).map(({ theme, posts: themePosts }) => (
+                <section key={theme.key} className="mb-12" aria-labelledby={`theme-${theme.key}`}>
+                  <div className="flex items-center gap-3 mb-5" style={themeStyle(theme)}>
+                    <span
+                      aria-hidden="true"
+                      className="w-3 h-3 rounded-full shrink-0 bg-[color:var(--theme)] dark:bg-[color:var(--theme-dark)]"
+                    />
+                    <h2 id={`theme-${theme.key}`} className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                      {theme.label[lang]}
+                    </h2>
+                    <span className="text-xs font-mono text-slate-500 dark:text-slate-400">{themePosts.length}</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {themePosts.map((post) => (
+                      <PostCard key={post.id} post={post} />
+                    ))}
+                  </div>
+                </section>
+              ))
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredPosts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
+            )}
 
             {filteredPosts.length === 0 && (
               <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-cyan-950 my-8">

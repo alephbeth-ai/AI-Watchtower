@@ -2,16 +2,19 @@ import React from 'react';
 import { Calendar, Clock, Tag, ArrowRight } from 'lucide-react';
 import { Post } from '../types';
 import { Link } from './Link';
+import { themeFor, themeStyle } from '../data/themes';
 
 interface PostCardProps {
   post: Post;
 }
 
 export const PostCard: React.FC<PostCardProps> = ({ post }) => {
+  const theme = themeFor(post.theme);
   return (
     <Link
       to={{ kind: 'post', lang: post.lang, slug: post.slug }}
-      className="group relative flex flex-col justify-between p-6 bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-cyan-950/60 hover:border-cyan-500/60 dark:hover:border-cyan-500/60 shadow-sm hover:shadow-cyber-cyan transition-all cursor-pointer overflow-hidden no-underline"
+      style={themeStyle(theme)}
+      className="group relative flex flex-col justify-between p-6 bg-white dark:bg-[#0f172a] rounded-2xl border border-slate-200 dark:border-cyan-950/60 border-l-[3px] border-l-[color:var(--theme)] dark:border-l-[color:var(--theme-dark)] hover:border-cyan-500/60 dark:hover:border-cyan-500/60 hover:border-l-[color:var(--theme)] dark:hover:border-l-[color:var(--theme-dark)] shadow-sm hover:shadow-cyber-cyan transition-all cursor-pointer overflow-hidden no-underline"
     >
       <article className="contents">
         {/* Top subtle glow line on hover */}
@@ -31,7 +34,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post }) => {
           </div>
 
           {/* Title */}
-          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors line-clamp-2 leading-snug mb-2.5">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors line-clamp-3 leading-snug mb-2.5">
             {post.title}
           </h2>
 

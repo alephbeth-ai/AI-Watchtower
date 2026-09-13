@@ -9,6 +9,8 @@ export interface Post {
   description: string;
   tags: string[];
   categories: string[];
+  /** Editorial axis (fundamentals | agents | poisoning | hardening); see data/themes.ts. */
+  theme?: string;
   content: string;
   readingTime?: number;
   featured?: boolean;
