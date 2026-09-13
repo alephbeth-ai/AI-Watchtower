@@ -85,7 +85,13 @@ for (const [path, raw] of Object.entries(rawPosts)) {
     theme: typeof metadata.theme === 'string' ? metadata.theme : undefined,
     content,
     readingTime: calculateReadingTime(content),
-    featured: slug.includes('how-llms-work') || slug.includes('comprendre-llm') || slug.includes('claude-desktop'),
+    // `featured: true` in front matter pins a post to the home carousel; the slug
+    // heuristic keeps the historical picks until they are tagged explicitly.
+    featured:
+      metadata.featured === true ||
+      slug.includes('how-llms-work') ||
+      slug.includes('comprendre-llm') ||
+      slug.includes('claude-desktop'),
     translationKey: typeof metadata.translationKey === 'string' ? metadata.translationKey : undefined,
   });
 }
