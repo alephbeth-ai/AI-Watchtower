@@ -124,3 +124,22 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Mermaid diagrams (```mermaid fences): shown as a figure, not as a code block.
+   Before the runtime has drawn the SVG the element holds the diagram source. */
+.prose pre.mermaid {
+  background-color: transparent;
+  border: none;
+  color: inherit;
+  padding: 0;
+  text-align: center;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.prose pre.mermaid svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
