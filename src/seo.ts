@@ -104,4 +104,18 @@ export function applyPageMeta(meta: PageMeta): void {
     l.href = site.url + alt.path;
     document.head.appendChild(l);
   }
+
+  const feed = upsert<HTMLLinkElement>('link[rel="alternate"][type="application/rss+xml"]', () => {
+    const l = document.createElement('link');
+    l.rel = 'alternate';
+    l.type = 'application/rss+xml';
+    return l;
+  });
+  feed.title = 'Aleph Beth — Articles (RSS)';
+  feed.href = site.url + feedPath(meta.lang);
+}
+
+/** RSS feed of the articles in one language, written by scripts/postbuild.mjs. */
+export function feedPath(lang: Language): string {
+  return lang === 'fr' ? '/fr/rss.xml' : '/rss.xml';
 }
