@@ -110,8 +110,6 @@ export function App() {
     navigate({ kind: 'lab', lang, widgetId });
   };
 
-  const homeRoute: Route = { kind: 'home', lang };
-
   return (
     <div className="min-h-screen flex flex-col bg-[#f8fafc] dark:bg-[#080d1a] text-[#0f172a] dark:text-[#f1f5f9] transition-colors font-sans">
       <Header
