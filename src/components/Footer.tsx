@@ -1,6 +1,7 @@
 import React from 'react';
-import { Github } from 'lucide-react';
+import { Github, Rss } from 'lucide-react';
 import { Language } from '../types';
+import { feedPath } from '../seo';
 
 interface FooterProps {
   lang: Language;
@@ -41,6 +42,15 @@ export const Footer: React.FC<FooterProps> = ({ lang }) => {
             >
               <Github className="w-4 h-4" />
               GitHub Repository
+            </a>
+            <span className="opacity-30">•</span>
+            <a
+              href={feedPath(lang)}
+              type="application/rss+xml"
+              className="inline-flex items-center gap-1.5 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
+            >
+              <Rss className="w-4 h-4" />
+              {lang === 'en' ? 'RSS feed' : 'Flux RSS'}
             </a>
             <span className="opacity-30">•</span>
             <a

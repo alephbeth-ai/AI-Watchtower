@@ -1,12 +1,14 @@
-// Post-build step for GitHub Pages: pre-render one index.html per route.
+// Post-build step for GitHub Pages, run by `npm run build` after `vite build`.
 //
-// GitHub Pages serves static files only. Without this step every deep link
-// (/posts/<slug>/, /fr/, /lab/…) would be a 404 and only the home page would
-// carry a <title> and <meta name="description">. The script copies the built
-// shell into dist/<route>/index.html with the head rewritten for that page, so
-// each address answers 200 with its own metadata even before JavaScript runs.
-// Unknown paths fall back to dist/404.html, the same shell, where the app
-// renders its not-found view.
+// 1. Pre-render one index.html per route. GitHub Pages serves static files
+//    only: without this every deep link (/posts/<slug>/, /fr/, /lab/…) would be
+//    a 404 and only the home page would carry a <title> and description. The
+//    script copies the built shell into dist/<route>/index.html with the head
+//    rewritten for that page, so each address answers 200 with its own
+//    metadata before JavaScript runs. Unknown paths fall back to dist/404.html,
+//    the same shell, where the app renders its not-found view.
+// 2. Emit the discovery files: sitemap.xml, robots.txt, and one RSS feed per
+//    language (rss.xml, fr/rss.xml).
 //
 // Route scheme and page metadata mirror src/router.ts and src/seo.ts.
 
@@ -22,6 +24,7 @@ const template = readFileSync(join(dist, 'index.html'), 'utf8');
 const LANGS = ['en', 'fr'];
 const other = (lang) => (lang === 'en' ? 'fr' : 'en');
 const prefix = (lang) => (lang === 'fr' ? '/fr' : '');
+const feedPath = (lang) => `${prefix(lang)}/rss.xml`;
 
 // --- Content -----------------------------------------------------------------
 
@@ -37,6 +40,14 @@ function parseFrontmatter(raw) {
     if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1);
     }
+    if (value.startsWith('[') && value.endsWith(']')) {
+      metadata[key] = value
+        .slice(1, -1)
+        .split(',')
+        .map((item) => item.trim().replace(/^['"]|['"]$/g, ''))
+        .filter(Boolean);
+      continue;
+    }
     metadata[key] = value === 'true' ? true : value === 'false' ? false : value;
   }
   return metadata;
@@ -50,15 +61,21 @@ function loadPosts() {
       if (!file.endsWith('.md') || file.startsWith('_')) continue;
       const meta = parseFrontmatter(readFileSync(join(dir, file), 'utf8'));
       if (meta.draft === true) continue;
+      const slug = file.replace(/\.md$/, '');
       posts.push({
         lang,
-        slug: file.replace(/\.md$/, ''),
+        slug,
+        path: `${prefix(lang)}/posts/${encodeURIComponent(slug)}/`,
         title: meta.title || file,
         description: meta.summary || meta.description || site[lang].description,
+        date: meta.date || '2026-06-01',
+        lastmod: meta.lastmod || meta.date || '2026-06-01',
+        tags: Array.isArray(meta.tags) ? meta.tags : [],
         translationKey: meta.translationKey,
       });
     }
   }
+  posts.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
   return posts;
 }
 
@@ -67,40 +84,45 @@ function widgetIds() {
   return [...new Set([...source.matchAll(/^\s*id:\s*'([^']+)'/gm)].map((m) => m[1]))];
 }
 
-// --- Rendering ---------------------------------------------------------------
+// --- Helpers -----------------------------------------------------------------
 
-function escapeHtml(s) {
+function escapeXml(s) {
   return String(s)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
+const absolute = (path) => `${site.url}${path}`;
+
+function writeFile(relativePath, content) {
+  const target = join(dist, ...relativePath.split('/').filter(Boolean));
+  mkdirSync(dirname(target), { recursive: true });
+  writeFileSync(target, content);
+}
+
+// --- HTML pages --------------------------------------------------------------
+
 function render({ title, description, lang, path, alternates }) {
+  const feedTitle = 'Aleph Beth — Articles (RSS)';
   const head = [
-    `<meta name="description" content="${escapeHtml(description)}" />`,
-    `<link rel="canonical" href="${site.url}${path}" />`,
-    ...alternates.map((a) => `<link rel="alternate" hreflang="${a.lang}" href="${site.url}${a.path}" />`),
+    `<meta name="description" content="${escapeXml(description)}" />`,
+    `<link rel="canonical" href="${absolute(path)}" />`,
+    ...alternates.map((a) => `<link rel="alternate" hreflang="${a.lang}" href="${absolute(a.path)}" />`),
+    `<link rel="alternate" type="application/rss+xml" title="${escapeXml(feedTitle)}" href="${absolute(feedPath(lang))}" />`,
   ]
     .map((line) => `    ${line}`)
     .join('\n');
 
   return template
     .replace(/<html lang="[^"]*">/, `<html lang="${lang}">`)
-    .replace(/<title>[\s\S]*?<\/title>/, `<title>${escapeHtml(title)}</title>`)
+    .replace(/<title>[\s\S]*?<\/title>/, `<title>${escapeXml(title)}</title>`)
     .replace(/\s*<meta name="description"[^>]*>/g, '')
     .replace(/\s*<link rel="canonical"[^>]*>/g, '')
     .replace('</head>', `${head}\n  </head>`);
 }
-
-function write(path, html) {
-  const dir = join(dist, ...path.split('/').filter(Boolean));
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, 'index.html'), html);
-}
-
-// --- Routes ------------------------------------------------------------------
 
 const pages = [];
 const pair = (lang, path, otherPath) => [
@@ -124,30 +146,95 @@ for (const lang of LANGS) {
 }
 
 const posts = loadPosts();
-for (const post of posts) {
-  const path = `${prefix(post.lang)}/posts/${encodeURIComponent(post.slug)}/`;
-  const translation = post.translationKey
+const translationOf = (post) =>
+  post.translationKey
     ? posts.find((p) => p.lang === other(post.lang) && p.translationKey === post.translationKey)
     : undefined;
+
+for (const post of posts) {
+  const translation = translationOf(post);
   pages.push({
     title: `${post.title} — ${site.name}`,
     description: post.description,
     lang: post.lang,
-    path,
-    alternates: translation
-      ? pair(post.lang, path, `${prefix(translation.lang)}/posts/${encodeURIComponent(translation.slug)}/`)
-      : [{ lang: post.lang, path }],
+    path: post.path,
+    lastmod: post.lastmod,
+    alternates: translation ? pair(post.lang, post.path, translation.path) : [{ lang: post.lang, path: post.path }],
   });
 }
 
 for (const page of pages) {
-  write(page.path, render(page));
+  writeFile(`${page.path}index.html`, render(page));
 }
 
 // Fallback shell for any other address (served by GitHub Pages with a 404 status).
-writeFileSync(
-  join(dist, '404.html'),
+writeFile(
+  '404.html',
   render({ title: `${site.en.notFound} — ${site.name}`, description: site.en.description, lang: 'en', path: '/', alternates: [] })
 );
 
-console.log(`[postbuild] pre-rendered ${pages.length} pages (${posts.length} posts) + 404.html`);
+// --- Discovery files ---------------------------------------------------------
+
+const newestPostDate = posts[0]?.lastmod ?? new Date().toISOString().slice(0, 10);
+
+const sitemap = [
+  '<?xml version="1.0" encoding="UTF-8"?>',
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
+  ...pages.map((page) =>
+    [
+      '  <url>',
+      `    <loc>${absolute(page.path)}</loc>`,
+      `    <lastmod>${page.lastmod ?? newestPostDate}</lastmod>`,
+      ...page.alternates
+        .filter((a) => a.path !== page.path)
+        .map((a) => `    <xhtml:link rel="alternate" hreflang="${a.lang}" href="${absolute(a.path)}" />`),
+      '  </url>',
+    ].join('\n')
+  ),
+  '</urlset>',
+  '',
+].join('\n');
+writeFile('sitemap.xml', sitemap);
+
+writeFile('robots.txt', ['User-agent: *', 'Allow: /', '', `Sitemap: ${absolute('/sitemap.xml')}`, ''].join('\n'));
+
+function rss(lang) {
+  const t = site[lang];
+  const items = posts.filter((p) => p.lang === lang);
+  const rfc822 = (date) => new Date(`${date}T08:00:00Z`).toUTCString();
+  const latest = items[0] ? rfc822(items[0].date) : new Date().toUTCString();
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
+    '  <channel>',
+    `    <title>${escapeXml(t.title)}</title>`,
+    `    <link>${absolute(`${prefix(lang)}/`)}</link>`,
+    `    <description>${escapeXml(t.description)}</description>`,
+    `    <language>${lang === 'fr' ? 'fr-fr' : 'en-us'}</language>`,
+    `    <lastBuildDate>${latest}</lastBuildDate>`,
+    `    <atom:link href="${absolute(feedPath(lang))}" rel="self" type="application/rss+xml" />`,
+    ...items.map((post) =>
+      [
+        '    <item>',
+        `      <title>${escapeXml(post.title)}</title>`,
+        `      <link>${absolute(post.path)}</link>`,
+        `      <guid isPermaLink="true">${absolute(post.path)}</guid>`,
+        `      <pubDate>${rfc822(post.date)}</pubDate>`,
+        `      <description>${escapeXml(post.description)}</description>`,
+        ...post.tags.map((tag) => `      <category>${escapeXml(tag)}</category>`),
+        '    </item>',
+      ].join('\n')
+    ),
+    '  </channel>',
+    '</rss>',
+    '',
+  ].join('\n');
+}
+
+for (const lang of LANGS) {
+  writeFile(feedPath(lang), rss(lang));
+}
+
+console.log(
+  `[postbuild] pre-rendered ${pages.length} pages (${posts.length} posts) + 404.html; wrote sitemap.xml, robots.txt, ${LANGS.map(feedPath).join(', ')}`
+);
