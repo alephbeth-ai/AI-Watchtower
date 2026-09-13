@@ -9,11 +9,12 @@ import site from './data/site.json';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { PostCard } from './components/PostCard';
+import { FeaturedCarousel } from './components/FeaturedCarousel';
 import { PostView } from './components/PostView';
 import { InteractiveShowcase } from './components/InteractiveShowcase';
 import { ContactView } from './components/ContactView';
 import { Link } from './components/Link';
-import { Sparkles, Filter, Search, ArrowRight, Cpu } from 'lucide-react';
+import { Filter, Search, ArrowRight, Cpu } from 'lucide-react';
 
 export function App() {
   // The URL is the source of truth for language, section, article and widget.
@@ -99,10 +100,6 @@ export function App() {
     navigate({ ...route, lang: newLang });
   };
 
-  const featuredPost = posts.find(
-    (p) => p.slug.includes('how-llms-work') || p.slug.includes('comprendre-llm')
-  ) || posts[0];
-
   const widgets = getWidgets(lang);
 
   const openWidget = (widgetId: string) => {
@@ -145,89 +142,20 @@ export function App() {
           <ContactView lang={lang} />
         ) : (
           <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-16">
-            {/* Hero Section */}
+            {/* Hero: carousel of featured articles, then the interactive tools */}
             {!searchQuery && selectedCategory === 'all' && (
+              <>
+                {/* Document title for the home page (the visible headings are the slides). */}
+                <h1 className="sr-only">{site[lang].title}</h1>
+
+                <FeaturedCarousel posts={posts} lang={lang} />
+
               <section className="mb-12 p-8 sm:p-10 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-cyan-900/50 shadow-sm relative overflow-hidden">
                 {/* Background circuit glow effect */}
                 <div className="absolute -right-20 -top-20 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
-                  <div className="max-w-2xl">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold font-mono bg-cyan-50 dark:bg-cyan-950/80 text-cyan-800 dark:text-cyan-300 border border-cyan-300/80 dark:border-cyan-700/80 mb-4 shadow-sm">
-                      <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
-                      {lang === 'en' ? 'Aleph Beth (אב · أب) — Defensive AI Security' : 'Aleph Beth (אב · أب) — Observatoire Sécurité IA'}
-                    </div>
-
-                    <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 leading-tight mb-4">
-                      {lang === 'en' ? (
-                        <>
-                          Practical Hardening & <br />
-                          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 via-teal-400 to-sky-400">
-                            Agentic Security Research
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          Recherche en Sécurité & <br />
-                          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 via-teal-400 to-sky-400">
-                            Durcissement des Agents IA
-                          </span>
-                        </>
-                      )}
-                    </h1>
-
-                    <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
-                      {site[lang].description}
-                    </p>
-
-                    {/* Featured Post Card Banner */}
-                    {featuredPost && (
-                      <Link
-                        to={{ kind: 'post', lang: featuredPost.lang, slug: featuredPost.slug }}
-                        className="p-4 rounded-2xl bg-slate-50 dark:bg-[#162032] border border-slate-200 dark:border-cyan-900/40 hover:border-cyan-500/60 cursor-pointer transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group hover:shadow-cyber-cyan no-underline"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                            <Sparkles className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400 font-mono">
-                              {lang === 'en' ? 'Featured Interactive Guide' : 'Guide Interactif À La Une'}
-                            </span>
-                            <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
-                              {featuredPost.title}
-                            </h3>
-                          </div>
-                        </div>
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 dark:text-cyan-400 group-hover:translate-x-1 transition-transform">
-                          {lang === 'en' ? 'Explore Diagrams' : 'Voir Les Schémas'} <ArrowRight className="w-3.5 h-3.5" />
-                        </span>
-                      </Link>
-                    )}
-                  </div>
-
-                  {/* Logo Display Showcase */}
-                  <div className="flex flex-col items-center flex-shrink-0">
-                    <div className="relative group p-1.5 rounded-3xl bg-gradient-to-br from-cyan-400 via-teal-500 to-blue-600 shadow-cyber-cyan">
-                      <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-[22px] overflow-hidden bg-[#080d1a] flex items-center justify-center relative">
-                        <img
-                          src="/logo.jpg"
-                          alt="AI Watchtower Emblem"
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      </div>
-                    </div>
-                    <span className="mt-3 text-xs font-semibold text-slate-500 dark:text-cyan-400/90 tracking-wider flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                      Aleph Beth · אב · أب
-                    </span>
-                  </div>
-                </div>
 
                 {/* Every interactive tool, straight from the homepage */}
-                <div className="relative z-10 mt-8 pt-8 border-t border-slate-200 dark:border-cyan-950/80">
+                <div className="relative z-10">
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono">
                       <Cpu className="w-3.5 h-3.5 text-cyan-500" />
@@ -277,6 +205,7 @@ export function App() {
                 </div>
 
               </section>
+              </>
             )}
 
             {/* Mobile Search Input */}
