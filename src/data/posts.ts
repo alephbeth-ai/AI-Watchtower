@@ -82,6 +82,7 @@ for (const [path, raw] of Object.entries(rawPosts)) {
     description: metadata.summary || metadata.description || '',
     tags: Array.isArray(metadata.tags) ? metadata.tags : [],
     categories: Array.isArray(metadata.categories) ? metadata.categories : [metadata.theme || 'General'],
+    theme: typeof metadata.theme === 'string' ? metadata.theme : undefined,
     content,
     readingTime: calculateReadingTime(content),
     featured: slug.includes('how-llms-work') || slug.includes('comprendre-llm') || slug.includes('claude-desktop'),
