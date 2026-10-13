@@ -1,0 +1,41 @@
+[cta_write]
+other = "Nous écrire"
+
+[status_pre]
+other = "Société en cours de création — ouverture des missions en {{ .date }}."
+
+[footer_nav]
+other = "Liens de pied de page"
+
+[footer_legal]
+other = "Mentions légales"
+
+[footer_privacy]
+other = "Confidentialité"
+
+[footer_rss]
+other = "Flux RSS"
+
+[footer_lang]
+other = "Changer de langue"
+
+[email_label]
+other = "Nous écrire par e-mail"
+
+[lab_title]
+other = "Lab interactif"
+
+[lab_intro]
+other = "Des outils autonomes pour comprendre, pas à pas, comment un modèle traite une phrase, comment un tokeniseur se manipule et comment durcir un agent. Tout s'exécute dans votre navigateur, rien n'est envoyé."
+
+[lab_open]
+other = "Ouvrir l'outil"
+
+[lab_reference]
+other = "Référence"
+
+[lab_other_tools]
+other = "Autres outils du Lab"
+
+[lab_back]
+other = "Retour au Lab"

@@ -1,0 +1,67 @@
+{{- $fr := eq site.Language.Lang "fr" }}
+{{- $cfg := hugo.Data.site }}
+{{- $pre := eq $cfg.launch_mode "pre" }}
+{{- if not (.Param "hideFooter") }}
+<footer class="footer ab-footer">
+    <div class="ab-footer-brand">
+        <span class="ab-footer-wordmark"><span class="ab-a">Aleph</span><span class="ab-b">Beth</span>
+            {{- with $cfg.brand_scripts }} <span class="ab-scripts" aria-hidden="true">{{ . }}</span>{{ end }}</span>
+        <p class="ab-footer-tagline">{{ cond $fr $cfg.tagline_fr $cfg.tagline_en }}</p>
+        {{- if $pre }}
+        <p class="ab-footer-status">{{ i18n "status_pre" (dict "date" (cond $fr $cfg.launch_date_label $cfg.launch_date_label_en)) }}</p>
+        {{- end }}
+    </div>
+
+    <nav class="ab-footer-links" aria-label="{{ i18n "footer_nav" }}">
+        {{- with site.GetPage (cond $fr "/mentions-legales" "/legal") }}
+        <a href="{{ .RelPermalink }}">{{ i18n "footer_legal" }}</a>
+        {{- end }}
+        {{- with site.GetPage (cond $fr "/confidentialite" "/privacy") }}
+        <a href="{{ .RelPermalink }}">{{ i18n "footer_privacy" }}</a>
+        {{- end }}
+        {{- with $cfg.contact.linkedin_url }}
+        <a href="{{ . }}" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        {{- end }}
+        {{- partial "email.html" . }}
+        {{- with .OutputFormats.Get "RSS" }}
+        <a href="{{ .RelPermalink }}" type="application/rss+xml">{{ i18n "footer_rss" }}</a>
+        {{- else }}
+        {{- with site.Home.OutputFormats.Get "RSS" }}
+        <a href="{{ .RelPermalink }}" type="application/rss+xml">{{ i18n "footer_rss" }}</a>
+        {{- end }}
+        {{- end }}
+        {{- $lang := .Lang }}
+        {{- range site.Home.Translations }}
+        {{- if ne $lang .Lang }}
+        <a href="{{ .Permalink }}" hreflang="{{ .Lang }}" aria-label="{{ i18n "footer_lang" }}">{{ .Language.Label }}</a>
+        {{- end }}
+        {{- end }}
+    </nav>
+
+    <p class="ab-footer-copy">&copy; {{ now.Year }} Aleph Beth</p>
+</footer>
+{{- end }}
+
+{{- if (not site.Params.disableScrollToTop) }}
+<a href="#top" id="top-link" class="top-link hidden" aria-label="{{ cond $fr "Retour en haut" "Go to top" }}" title="{{ cond $fr "Retour en haut" "Go to top" }} (Alt + G)" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevrons-up">
+        <polyline points="17 11 12 6 7 11"></polyline>
+        <polyline points="17 18 12 13 7 18"></polyline>
+    </svg>
+</a>
+{{- end }}
+
+{{- partial "extend_footer.html" . }}
+
+{{- /* Site behaviours (theme toggle, top link, copy buttons, e-mail, widget
+       resizing) live in one external, fingerprinted file: no inline script. */}}
+{{- $opts := dict "minify" true "params" (dict
+      "copy" (i18n "code_copy" | default "copy")
+      "copied" (i18n "code_copied" | default "copied!")
+      "copyButtons" (and (eq .Kind "page") (ne .Layout "archives") (ne .Layout "search") (.Param "ShowCodeCopyButtons"))
+      "scrollToTop" (not site.Params.disableScrollToTop)) }}
+{{- with resources.Get "js/site.js" }}
+{{- $js := . | js.Build $opts | fingerprint }}
+<script defer crossorigin="anonymous" src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}"></script>
+{{- end }}

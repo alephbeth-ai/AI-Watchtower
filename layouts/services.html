@@ -1,0 +1,79 @@
+{{- define "main" }}
+{{- $fr := eq .Lang "fr" }}
+{{- $o := index hugo.Data.offer .Lang }}
+{{- $sp := $o.services_page }}
+{{- $L := $sp.labels }}
+{{- $cfg := hugo.Data.site }}
+{{- $open := eq $cfg.launch_mode "open" }}
+{{- $contact := "contact/" | absLangURL }}
+
+<header class="ab-page-head">
+    <h1>{{ .Title }}</h1>
+    <p class="ab-lead">{{ $sp.intro }}</p>
+</header>
+
+{{- .Content }}
+
+<div class="ab-service-list">
+    {{- range $o.services }}
+    {{- $price := "" }}
+    {{- if $open }}
+        {{- if eq .id "diagnostic" }}{{ with $cfg.pricing.diagnostic_from_eur }}{{ $price = . }}{{ end }}{{ end }}
+        {{- if eq .id "audit" }}{{ with $cfg.pricing.audit_from_eur }}{{ $price = . }}{{ end }}{{ end }}
+        {{- if eq .id "securisation" }}{{ with $cfg.pricing.security_from_eur }}{{ $price = . }}{{ end }}{{ end }}
+    {{- end }}
+    <article class="ab-service{{ if .flagship }} is-flagship{{ end }}" id="{{ .id }}">
+        <header class="ab-service-head">
+            <span class="ab-card-kicker">{{ .duration }}{{ if .flagship }} · {{ $L.flagship }}{{ end }}</span>
+            <h2>{{ .name }}</h2>
+            <p class="ab-service-pitch">{{ .pitch }}</p>
+        </header>
+        <dl class="ab-service-grid">
+            <div><dt>{{ $L.who }}</dt><dd>{{ .who }}</dd></div>
+            <div><dt>{{ $L.problem }}</dt><dd>{{ .problem }}</dd></div>
+            <div><dt>{{ $L.what }}</dt><dd>{{ .what }}</dd></div>
+            <div><dt>{{ $L.deliverables }}</dt><dd>{{ .deliverables }}</dd></div>
+            <div><dt>{{ $L.duration }}</dt><dd>{{ .duration }}{{ with $price }} · {{ printf $L.price_from (string .) }}{{ end }}</dd></div>
+            <div><dt>{{ $L.how }}</dt><dd>{{ .how }}</dd></div>
+        </dl>
+        <a class="ab-cta" href="{{ $contact }}?subject={{ .id }}">{{ i18n "cta_write" }}</a>
+    </article>
+    {{- end }}
+</div>
+
+<section class="ab-section ab-two-col">
+    <div>
+        <h2>{{ $sp.method_title }}</h2>
+        <p>{{ $sp.method_text }}</p>
+        <ul class="ab-refs">
+            {{- range $sp.method_refs }}<li>{{ . }}</li>{{ end }}
+        </ul>
+    </div>
+    <div>
+        <h2>{{ $sp.frame_title }}</h2>
+        <ul class="ab-frame">
+            {{- range $sp.frame }}
+            <li><strong>{{ .title }}</strong> {{ .text }}</li>
+            {{- end }}
+        </ul>
+    </div>
+</section>
+
+<section class="ab-section">
+    <h2>{{ $sp.faq_title }}</h2>
+    <div class="ab-faq">
+        {{- range $sp.faq }}
+        <details class="ab-faq-item">
+            <summary>{{ .q }}</summary>
+            <p>{{ .a }}</p>
+        </details>
+        {{- end }}
+    </div>
+</section>
+
+<section class="ab-final">
+    <h2>{{ $o.home.final_title }}</h2>
+    <p>{{ $o.home.final_text }}</p>
+    <a class="ab-cta ab-cta-lg" href="{{ $contact }}">{{ i18n "cta_write" }}</a>
+</section>
+{{- end }}

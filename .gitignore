@@ -3,10 +3,6 @@
 /resources/_gen/
 .hugo_build.lock
 
-# Node / Vite build output
-node_modules/
-/dist/
-
 # Editor / OS
 .DS_Store
 Thumbs.db

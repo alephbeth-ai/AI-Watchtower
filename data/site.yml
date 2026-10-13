@@ -1,0 +1,41 @@
+# ─── Configuration centrale du site ──────────────────────────────────────────
+# Un seul interrupteur : launch_mode.
+#   "pre"  : société en cours de création. Aucun tarif, aucune mention légale
+#            d'entité, formulaire = liste d'attente.
+#   "open" : missions ouvertes. Mentions légales complètes, tarifs indicatifs,
+#            lien de prise de rendez-vous.
+# Toute valeur vide n'affiche rien (jamais de champ vide visible).
+
+launch_mode: "pre"            # "pre" | "open"
+launch_date_label: "janvier 2027"
+launch_date_label_en: "January 2027"
+
+brand: "Aleph Beth"
+# Graphies de la marque dans les écritures sémitiques (hébreu, arabe),
+# affichées à côté du nom.
+brand_scripts: "אב · أب"
+tagline_fr: "Nous sécurisons les agents IA de votre entreprise."
+tagline_en: "We secure your company's AI agents."
+
+contact:
+  email: "contact@alephbeth.ai"   # déjà publique sur le site précédent
+  form_endpoint: ""               # TODO : URL du service de formulaire (Formspree)
+  booking_url: ""                 # optionnel, affiché seulement en mode "open"
+  linkedin_url: ""                # TODO : page LinkedIn de l'entreprise
+
+legal:                            # affiché seulement en mode "open"
+  company_name: ""                # TODO-LEGAL
+  legal_form: ""                  # TODO-LEGAL
+  siret: ""                       # TODO-LEGAL
+  address: ""                     # TODO-LEGAL
+  publication_director: ""        # TODO-LEGAL
+  host: "GitHub Pages (GitHub Inc.)"
+
+pricing:                          # affiché seulement en mode "open"
+  diagnostic_from_eur: null
+  audit_from_eur: null
+  security_from_eur: null
+
+analytics:
+  enabled: false
+  domain: ""

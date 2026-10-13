@@ -1,0 +1,9 @@
+{{- /* E-mail de contact, assemblé par assets/js/site.js (jamais en clair
+       dans le HTML). Sans JavaScript, la forme "nom [at] domaine" reste lisible.
+       Aucun paramètre dans le mailto. */ -}}
+{{- with hugo.Data.site.contact.email -}}
+{{- $p := split . "@" -}}
+{{- if eq (len $p) 2 -}}
+<a class="ab-mail" href="#contact" data-u="{{ index $p 0 }}" data-d="{{ index $p 1 }}" aria-label="{{ i18n "email_label" }}">{{ index $p 0 }}&nbsp;[at]&nbsp;{{ index $p 1 }}</a>
+{{- end -}}
+{{- end -}}

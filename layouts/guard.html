@@ -1,0 +1,48 @@
+{{- define "main" }}
+{{- $fr := eq .Lang "fr" }}
+{{- $g := (index hugo.Data.offer .Lang).guard }}
+{{- $contact := "contact/" | absLangURL }}
+
+<header class="ab-page-head">
+    <h1>{{ .Title }} <span class="ab-h1-sub">— {{ $g.status | lower }}</span></h1>
+    <p class="ab-lead">{{ $g.problem }}</p>
+</header>
+
+{{- .Content }}
+
+<section class="ab-section ab-two-col ab-guard">
+    <div>
+        <h2>{{ $g.principle_title }}</h2>
+        <p>{{ $g.principle }}</p>
+        <h2>{{ $g.audience_title }}</h2>
+        <p>{{ $g.audience }}</p>
+    </div>
+    <figure class="ab-schema">
+        {{- with resources.Get "images/guard-schema.svg" }}
+        <img src="{{ .RelPermalink }}" alt="{{ $g.principle_title }}" loading="lazy">
+        {{- else }}
+        <div class="ab-schema-placeholder" aria-hidden="true">
+            <span>Agent</span><span class="ab-schema-arrow">→</span><span class="is-accent">Guard</span><span class="ab-schema-arrow">→</span><span>{{ cond $fr "Outils" "Tools" }}</span>
+        </div>
+        {{- end }}
+        <figcaption>{{ $g.schema_caption }}</figcaption>
+    </figure>
+</section>
+
+<section class="ab-section">
+    <h2>{{ $g.validating_title }}</h2>
+    <ul class="ab-checks">
+        {{- range $g.validating }}<li>{{ . }}</li>{{ end }}
+    </ul>
+</section>
+
+<section class="ab-band">
+    <div class="ab-band-text">
+        <h2>{{ $g.pilot_title }}</h2>
+        <p>{{ $g.pilot_text }}</p>
+    </div>
+    <a class="ab-cta" href="{{ $contact }}?subject=guard">{{ $g.pilot_cta }}</a>
+</section>
+
+<p class="ab-note">{{ $g.honest }}</p>
+{{- end }}
