@@ -1,0 +1,144 @@
+/* ============================================================================
+   Pages commerciales (L3) : accueil, services, Agent IA Guard, à propos
+   ========================================================================== */
+
+.ab-eyebrow {
+    margin: 0 0 .5rem; font-size: .78rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .08em; color: var(--ab-accent);
+}
+.ab-lead { font-size: 1.1rem; line-height: 1.6; color: var(--content); margin: 0; max-width: 46rem; }
+.ab-actions { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.5rem; }
+.ab-cta-lg { padding: .8rem 1.4rem; font-size: 1rem; }
+.ab-link { color: var(--ab-accent); text-decoration: none; font-weight: 600; }
+.ab-link:hover { text-decoration: underline; }
+
+/* Hero */
+.ab-hero {
+    display: grid; grid-template-columns: 1fr; gap: 1.6rem; align-items: center;
+    padding: 1.2rem 0 1.6rem;
+}
+.ab-hero h1 { font-size: clamp(1.9rem, 4.5vw, 2.9rem); line-height: 1.12; margin: 0 0 .9rem; letter-spacing: -0.02em; }
+.ab-hero-art { display: none; }
+@media (min-width: 820px) {
+    .ab-hero { grid-template-columns: 1.6fr 1fr; padding: 2.2rem 0 2.4rem; }
+    .ab-hero-art { display: flex; justify-content: center; }
+    .ab-hero-art img {
+        width: 240px; height: 240px; border-radius: 28px;
+        box-shadow: 0 0 0 1px rgba(34, 211, 238, .35), 0 0 48px var(--ab-glow);
+    }
+}
+
+/* Sections */
+.ab-section { margin: 2.6rem 0; }
+.ab-section-head { margin-bottom: 1.1rem; }
+.ab-section-head h2, .ab-section > h2 { font-size: clamp(1.35rem, 2.6vw, 1.7rem); margin: 0 0 .4rem; }
+.ab-section-lead { margin: 0; color: var(--secondary); max-width: 46rem; }
+.ab-section-head-row { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.ab-page-head { margin: 1.2rem 0 1.8rem; }
+.ab-page-head h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); margin: 0 0 .7rem; letter-spacing: -0.02em; }
+.ab-h1-sub { font-weight: 400; color: var(--secondary); font-size: .6em; }
+
+.ab-grid-3 { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 680px) { .ab-grid-3 { grid-template-columns: repeat(3, 1fr); } }
+.ab-two-col { display: grid; grid-template-columns: 1fr; gap: 2rem; }
+@media (min-width: 820px) { .ab-two-col { grid-template-columns: 1fr 1fr; } }
+.ab-two-col h2 { font-size: 1.25rem; margin: 0 0 .6rem; }
+.ab-two-col h2 + h2, .ab-two-col p + h2 { margin-top: 1.4rem; }
+
+/* Cartes */
+.ab-card {
+    display: flex; flex-direction: column; gap: .5rem;
+    padding: 18px 20px; border-radius: 14px;
+    background: var(--entry); border: 1px solid var(--border);
+    color: var(--content); text-decoration: none;
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.ab-card h3 { margin: 0; font-size: 1.08rem; color: var(--primary); }
+.ab-card p { margin: 0; font-size: .92rem; line-height: 1.55; }
+a.ab-card:hover { transform: translateY(-2px); border-color: var(--ab-accent); box-shadow: 0 10px 30px rgba(0,0,0,.14), 0 0 0 1px var(--ab-accent-soft); }
+a.ab-card:hover h3 { color: var(--ab-accent); }
+.ab-card-kicker { font-size: .74rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ab-accent); }
+.ab-more { margin-top: auto; padding-top: .4rem; font-size: .86rem; font-weight: 600; color: var(--primary); }
+.ab-service-card.is-flagship { border-color: var(--ab-accent); box-shadow: 0 0 0 1px var(--ab-accent-soft), 0 0 28px var(--ab-glow); }
+
+.ab-risk { border-top: 3px solid var(--ab-alert); }
+.ab-risk-mark { display: none; }
+
+.ab-cred h3 { font-size: 1.02rem; margin: 0 0 .4rem; color: var(--primary); }
+.ab-cred p { margin: 0; font-size: .92rem; line-height: 1.55; color: var(--content); }
+
+/* Bandeau produit */
+.ab-band {
+    margin: 2.6rem 0; padding: 1.6rem 1.5rem; border-radius: 16px;
+    background: linear-gradient(135deg, var(--ab-navy), #0b1f33);
+    color: #e2e8f0; border: 1px solid rgba(34, 211, 238, .35);
+    box-shadow: 0 0 40px var(--ab-glow);
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.2rem;
+}
+.ab-band h2 { margin: 0 0 .4rem; font-size: 1.3rem; color: #f8fafc; }
+.ab-band p { margin: 0; color: #cbd5e1; max-width: 46rem; }
+.ab-band .ab-eyebrow { color: var(--ab-cyan); }
+.ab-band .ab-cta { background: var(--ab-cyan); color: var(--ab-navy); border-color: transparent; }
+.ab-band .ab-cta:hover { background: #67e8f9; color: var(--ab-navy); }
+.ab-band .ab-cta-secondary { background: transparent; color: #f8fafc; border-color: rgba(34, 211, 238, .55); }
+.ab-band .ab-cta-secondary:hover { background: rgba(34, 211, 238, .12); color: #f8fafc; }
+
+/* Appel final */
+.ab-final {
+    margin: 3rem 0 1rem; padding: 2rem 1.5rem; text-align: center;
+    border-radius: 16px; background: var(--entry); border: 1px solid var(--border);
+}
+.ab-final h2 { margin: 0 0 .5rem; font-size: 1.5rem; }
+.ab-final p { margin: 0 0 1.2rem; color: var(--secondary); }
+
+/* Fiches services */
+.ab-service-list { display: grid; gap: 1.4rem; margin: 1.6rem 0 2.6rem; }
+.ab-service {
+    padding: 1.5rem 1.5rem 1.6rem; border-radius: 16px;
+    background: var(--entry); border: 1px solid var(--border);
+    scroll-margin-top: 90px;
+}
+.ab-service.is-flagship { border-color: var(--ab-accent); box-shadow: 0 0 0 1px var(--ab-accent-soft), 0 0 32px var(--ab-glow); }
+.ab-service-head h2 { margin: .25rem 0 .4rem; font-size: 1.45rem; }
+.ab-service-pitch { margin: 0 0 1.1rem; color: var(--content); font-size: 1.02rem; }
+.ab-service-grid { display: grid; grid-template-columns: 1fr; gap: .9rem 1.4rem; margin: 0 0 1.3rem; }
+@media (min-width: 680px) { .ab-service-grid { grid-template-columns: 1fr 1fr; } }
+.ab-service-grid dt { font-size: .76rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ab-accent); margin: 0 0 .25rem; }
+.ab-service-grid dd { margin: 0; font-size: .94rem; line-height: 1.55; color: var(--content); }
+
+.ab-refs, .ab-frame, .ab-checks { margin: 0; padding-inline-start: 1.2rem; line-height: 1.65; }
+.ab-refs li, .ab-frame li, .ab-checks li { margin: .3rem 0; }
+.ab-frame strong { color: var(--primary); }
+.ab-checks { list-style: none; padding: 0; }
+.ab-checks li { padding-inline-start: 1.5rem; position: relative; }
+.ab-checks li::before { content: "\2713"; position: absolute; left: 0; color: var(--ab-accent); font-weight: 700; }
+
+/* FAQ : accordéon natif, accessible au clavier */
+.ab-faq { display: grid; gap: .6rem; }
+.ab-faq-item { border: 1px solid var(--border); border-radius: 12px; background: var(--entry); padding: 0 1.1rem; }
+.ab-faq-item summary { cursor: pointer; padding: .9rem 0; font-weight: 600; color: var(--primary); list-style: none; display: flex; justify-content: space-between; gap: 1rem; }
+.ab-faq-item summary::-webkit-details-marker { display: none; }
+.ab-faq-item summary::after { content: "+"; color: var(--ab-accent); font-weight: 700; flex: 0 0 auto; }
+.ab-faq-item[open] summary::after { content: "\2013"; }
+.ab-faq-item summary:focus-visible { outline: 2px solid var(--ab-accent); outline-offset: 4px; border-radius: 6px; }
+.ab-faq-item p { margin: 0 0 1rem; color: var(--content); line-height: 1.6; }
+
+/* Agent IA Guard */
+.ab-status {
+    display: inline-block; margin-bottom: .7rem; padding: .3rem .7rem; border-radius: 999px;
+    font-size: .76rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+    color: var(--ab-accent); background: var(--ab-accent-soft); border: 1px solid var(--ab-accent);
+}
+.ab-schema { margin: 0; }
+.ab-schema img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--border); }
+.ab-schema-placeholder {
+    display: flex; align-items: center; justify-content: center; gap: .8rem; flex-wrap: wrap;
+    min-height: 180px; padding: 1.2rem; border-radius: 12px;
+    border: 1px dashed var(--ab-accent); background: var(--ab-accent-soft);
+    font-weight: 600; color: var(--primary);
+}
+.ab-schema-placeholder span { padding: .5rem .9rem; border-radius: 8px; background: var(--entry); border: 1px solid var(--border); }
+.ab-schema-placeholder .is-accent { border-color: var(--ab-accent); color: var(--ab-accent); }
+.ab-schema-placeholder .ab-schema-arrow { background: none; border: 0; padding: 0; color: var(--secondary); }
+.ab-schema figcaption { margin-top: .5rem; font-size: .82rem; color: var(--secondary); text-align: center; }
+.ab-note { font-size: .86rem; color: var(--secondary); margin: 1.5rem 0 0; }

@@ -1,0 +1,100 @@
+/* ============================================================================
+   Aleph Beth — palette alignée sur le logo (chouette, hexagone cyan sur nuit)
+   Deux couleurs + neutres : nuit #080d1a · cyan #22d3ee (foncé #0e7490 sur
+   fond clair pour le contraste) · neutres ardoise.
+   Type : Geist (titres et corps) · Geist Mono (code). Deux familles.
+   Contraste : accent #0e7490 sur blanc 5,5:1 ; #22d3ee sur #080d1a 11:1.
+   ========================================================================== */
+
+:root {
+    --ab-navy:   #080d1a;
+    --ab-cyan:   #22d3ee;
+    --ab-cyan-deep: #0e7490;
+    --ab-cyan-ink: #155e75;
+    --ab-alert:  #e11d48;
+
+    --ab-accent: var(--ab-cyan-deep);
+    --ab-accent-soft: rgba(14, 116, 144, .10);
+    --ab-glow: rgba(34, 211, 238, .18);
+
+    /* PaperMod surfaces — clair */
+    --theme: #f8fafc;
+    --entry: #ffffff;
+    --primary: #0f172a;
+    --secondary: #475569;
+    --tertiary: #e2e8f0;
+    --content: #1e293b;
+    --code-bg: #e8f1f6;
+    --code-block-bg: #0b1220;
+    --border: #d9e2ec;
+}
+
+:root[data-theme="dark"] {
+    --ab-accent: var(--ab-cyan);
+    --ab-accent-soft: rgba(34, 211, 238, .10);
+    --ab-glow: rgba(34, 211, 238, .22);
+
+    --theme: #080d1a;
+    --entry: #0f172a;
+    --primary: #f1f5f9;
+    --secondary: #94a3b8;
+    --tertiary: #1e293b;
+    --content: #cbd5e1;
+    --code-bg: #10203a;
+    --code-block-bg: #050913;
+    --border: #1e293b;
+}
+
+/* ----- Typographie ------------------------------------------------------- */
+
+body {
+    font-family: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6,
+.post-title, .entry-header h2, .page-header .title {
+    font-family: "Geist", system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+code, pre, kbd, samp,
+.post-content code, .highlight pre code, .post-content pre code {
+    font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* ----- En-tête : logo + wordmark ----------------------------------------- */
+
+.ab-logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+.ab-emblem {
+    height: 40px; width: 40px; display: block; flex: 0 0 auto;
+    border-radius: 9px; object-fit: cover;
+    box-shadow: 0 0 0 1px rgba(34, 211, 238, .35), 0 0 14px var(--ab-glow);
+}
+.ab-wordmark { font-weight: 700; font-size: 1.35rem; line-height: 1; letter-spacing: -0.01em; white-space: nowrap; }
+.ab-wordmark .ab-a { color: var(--primary); }
+.ab-wordmark .ab-b { color: var(--ab-accent); }
+.logo a { font-size: inherit; }
+
+/* ----- Accents ----------------------------------------------------------- */
+
+.post-content a, .post-content a code { color: var(--ab-accent); text-decoration-color: color-mix(in srgb, var(--ab-accent) 45%, transparent); }
+.post-content a:hover { text-decoration-color: var(--ab-accent); }
+.post-entry:hover .entry-header h2, .entry-header h2:hover, .post-title a:hover { color: var(--ab-accent); }
+.nav .menu a:hover span, #menu a:hover span { color: var(--ab-accent); }
+#menu .active { border-bottom: 2px solid var(--ab-accent); }
+.post-content :not(pre) > code { color: var(--ab-cyan-ink); background: var(--code-bg); }
+:root[data-theme="dark"] .post-content :not(pre) > code { color: var(--ab-cyan); }
+.post-content blockquote { border-inline-start: 3px solid var(--ab-accent); background: var(--ab-accent-soft); }
+.post-content hr { background: var(--border); }
+::selection { background: rgba(34, 211, 238, .30); color: var(--primary); }
+.post-tags a, .terms-tags a { border: 1px solid var(--border); background: var(--entry); }
+.post-tags a:hover, .terms-tags a:hover { border-color: var(--ab-accent); color: var(--ab-accent); }
+.first-entry { min-height: auto; }
+.button, .code-copy-button:hover { background: var(--ab-cyan-deep); color: #fff; }
+:root[data-theme="dark"] .button { background: var(--ab-cyan); color: var(--ab-navy); }
+::-webkit-scrollbar-thumb { background: var(--secondary); }
+
+/* Cartes d'articles PaperMod : liseré cyan au survol */
+.post-entry { border: 1px solid var(--border); }
+.post-entry:hover { border-color: var(--ab-accent); }

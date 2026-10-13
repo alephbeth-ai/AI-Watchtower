@@ -52,8 +52,8 @@ buildExpired = false
     favicon32x32 = "favicon-32.png"
     apple_touch_icon = "apple-touch-icon.png"
     safari_pinned_tab = "favicon-192.png"
-    theme_color = "#15264d"
-    msapplication_TileColor = "#15264d"
+    theme_color = "#080d1a"
+    msapplication_TileColor = "#080d1a"
 
 [markup]
   [markup.highlight]
@@ -85,6 +85,21 @@ buildExpired = false
     [languages.en.params]
       description = "AI-agent security: audit, red teaming and production hardening. Research on prompt injection, MCP server security, agent threat models and hardening playbooks."
     [[languages.en.menus.main]]
+      identifier = "services"
+      name = "Services"
+      pageRef = "/services"
+      weight = 10
+    [[languages.en.menus.main]]
+      identifier = "guard"
+      name = "Agent IA Guard"
+      pageRef = "/agent-ia-guard"
+      weight = 20
+    [[languages.en.menus.main]]
+      identifier = "about"
+      name = "About"
+      pageRef = "/about"
+      weight = 40
+    [[languages.en.menus.main]]
       identifier = "research"
       name = "Research"
       pageRef = "/posts"
@@ -93,7 +108,7 @@ buildExpired = false
       identifier = "lab"
       name = "Lab"
       pageRef = "/lab"
-      weight = 35
+      weight = 45
     [[languages.en.menus.main]]
       identifier = "contact"
       name = "Contact"
@@ -109,6 +124,21 @@ buildExpired = false
     [languages.fr.params]
       description = "Sécurité des agents IA : audit, red teaming et protection en production. Recherche sur l'injection de prompts, la sécurité des serveurs MCP, les modèles de menace agentiques et le durcissement."
     [[languages.fr.menus.main]]
+      identifier = "services"
+      name = "Services"
+      pageRef = "/services"
+      weight = 10
+    [[languages.fr.menus.main]]
+      identifier = "guard"
+      name = "Agent IA Guard"
+      pageRef = "/agent-ia-guard"
+      weight = 20
+    [[languages.fr.menus.main]]
+      identifier = "about"
+      name = "À propos"
+      pageRef = "/a-propos"
+      weight = 40
+    [[languages.fr.menus.main]]
       identifier = "research"
       name = "Recherche"
       pageRef = "/posts"
@@ -117,7 +147,7 @@ buildExpired = false
       identifier = "lab"
       name = "Lab"
       pageRef = "/lab"
-      weight = 35
+      weight = 45
     [[languages.fr.menus.main]]
       identifier = "contact"
       name = "Contact"
