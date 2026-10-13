@@ -1,0 +1,41 @@
+[cta_write]
+other = "Write to us"
+
+[status_pre]
+other = "Company in formation — engagements open in {{ .date }}."
+
+[footer_nav]
+other = "Footer links"
+
+[footer_legal]
+other = "Legal notice"
+
+[footer_privacy]
+other = "Privacy"
+
+[footer_rss]
+other = "RSS feed"
+
+[footer_lang]
+other = "Switch language"
+
+[email_label]
+other = "Write to us by e-mail"
+
+[lab_title]
+other = "Interactive Lab"
+
+[lab_intro]
+other = "Standalone tools to see, step by step, how a model processes a sentence, how a tokenizer can be manipulated and how to harden an agent. Everything runs in your browser; nothing is sent anywhere."
+
+[lab_open]
+other = "Open the tool"
+
+[lab_reference]
+other = "Reference"
+
+[lab_other_tools]
+other = "Other tools in the Lab"
+
+[lab_back]
+other = "Back to the Lab"

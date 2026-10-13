@@ -1,3 +1,3 @@
 ---
-title: "AI Watchtower"
+title: "Aleph Beth"
 ---

@@ -1,0 +1,9 @@
+{{- /* Bandeau d'annonce : affiché tant que launch_mode = "pre". */ -}}
+{{- $cfg := hugo.Data.site }}
+{{- if eq $cfg.launch_mode "pre" }}
+{{- $fr := eq site.Language.Lang "fr" }}
+<div class="ab-announce" role="note">
+    <span class="ab-announce-dot" aria-hidden="true"></span>
+    <span>{{ i18n "status_pre" (dict "date" (cond $fr $cfg.launch_date_label $cfg.launch_date_label_en)) }}</span>
+</div>
+{{- end }}

@@ -1,0 +1,7 @@
+{{- /* Embed a self-contained interactive widget from /static/widgets via an isolated iframe.
+       Usage: {{< widget src="/widgets/lstm-en.html" title="Interactive LSTM diagram" >}}
+       The widget posts its height via postMessage; assets/js/site.js resizes the frame.
+       Styling lives in assets/css/extended/components.css (no inline style, no inline script). */ -}}
+{{- $src := .Get "src" | strings.TrimPrefix "/" | relURL -}}
+{{- $title := .Get "title" | default "Interactive diagram" -}}
+<iframe class="wt-widget" src="{{ $src }}" title="{{ $title }}" loading="lazy"></iframe>

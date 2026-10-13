@@ -1,0 +1,44 @@
+{{- define "main" }}
+{{- $lang := .Lang }}
+{{- $id := .Params.widget }}
+{{- $w := index (where hugo.Data.lab.widgets "id" $id) 0 }}
+{{- $section := .Parent }}
+<article class="post-single ab-lab-single">
+    <header class="post-header">
+        {{- with $section }}
+        <div class="breadcrumbs"><a href="{{ site.Home.RelPermalink }}">{{ cond (eq $lang "fr") "Accueil" "Home" }}</a>&nbsp;»&nbsp;<a href="{{ .RelPermalink }}">{{ .Title }}</a></div>
+        {{- end }}
+        {{- with $w }}
+        <span class="ab-lab-badge">{{ index .badge $lang }}</span>
+        <h1 class="post-title">{{ index .title $lang }}</h1>
+        <p class="post-description">{{ index .description $lang }}</p>
+        {{- with .paper }}<p class="ab-lab-paper"><span>{{ i18n "lab_reference" }}</span> {{ . }}</p>{{ end }}
+        {{- else }}
+        <h1 class="post-title">{{ $.Title }}</h1>
+        {{- end }}
+    </header>
+
+    <div class="post-content">
+        {{- $.Content }}
+        {{- with $w }}
+        {{- $src := printf "widgets/%s-%s.html" .id $lang | relURL }}
+        <iframe class="wt-widget{{ if eq .variant "app" }} wt-app{{ end }}" src="{{ $src }}" title="{{ index .title $lang }}" loading="lazy" allowfullscreen></iframe>
+        {{- with index .hint $lang }}<p class="ab-lab-hint">{{ . }}</p>{{ end }}
+        {{- end }}
+    </div>
+
+    {{- $others := where $section.Pages "Params.widget" "ne" $id }}
+    {{- with $others }}
+    <nav class="ab-lab-others" aria-label="{{ i18n "lab_other_tools" }}">
+        <h2>{{ i18n "lab_other_tools" }}</h2>
+        <ul>
+            {{- range . }}
+            {{- $o := index (where hugo.Data.lab.widgets "id" .Params.widget) 0 }}
+            <li><a href="{{ .RelPermalink }}">{{ with $o }}{{ index .title $lang }}{{ else }}{{ .Title }}{{ end }}</a></li>
+            {{- end }}
+        </ul>
+        {{- with $section }}<a class="ab-lab-backlink" href="{{ .RelPermalink }}">← {{ i18n "lab_back" }}</a>{{ end }}
+    </nav>
+    {{- end }}
+</article>
+{{- end }}

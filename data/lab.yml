@@ -1,0 +1,90 @@
+# Catalogue du Lab interactif. Chaque entrée correspond à une page
+# content/{en,fr}/lab/<id>.md et à un widget static/widgets/<id>-{en,fr}.html.
+
+categories:
+  - key: architectures
+    en: "Model architectures"
+    fr: "Architectures des modèles"
+  - key: security
+    en: "Tokens & security"
+    fr: "Tokens & sécurité"
+  - key: hardening
+    en: "Practical hardening & agentic security"
+    fr: "Durcissement pratique & sécurité agentique"
+
+widgets:
+  - id: transformer
+    category: architectures
+    variant: flow
+    paper: "Vaswani et al., 2017 — “Attention Is All You Need”"
+    title:
+      en: "The Transformer (self-attention)"
+      fr: "Le Transformer (auto-attention)"
+    badge:
+      en: "Modern LLM standard"
+      fr: "Standard des LLM modernes"
+    description:
+      en: "Step through Query, Key and Value projections, attention weights, residual connections and token prediction. Every word looks directly at every other word, in parallel."
+      fr: "Suivez pas à pas les projections Requête, Clé, Valeur, les poids d'attention, les connexions résiduelles et la prédiction. Chaque mot interagit directement avec tous les autres."
+
+  - id: lstm
+    category: architectures
+    variant: flow
+    paper: "Hochreiter & Schmidhuber, 1997"
+    title:
+      en: "The LSTM (gated recurrent network)"
+      fr: "Le LSTM (réseau récurrent à portes)"
+    badge:
+      en: "Sequential recurrence"
+      fr: "Récurrence séquentielle"
+    description:
+      en: "Step through the forget, input and output gates that regulate the memory conveyor belt (cell state C) across time steps."
+      fr: "Explorez les portes d'oubli, d'entrée et de sortie qui régulent le tapis roulant de mémoire (état de cellule C) au fil des mots."
+
+  - id: cnn
+    category: architectures
+    variant: flow
+    paper: "Kim, 2014 · WaveNet, 2016"
+    title:
+      en: "The 1D CNN (sliding convolutions)"
+      fr: "Le CNN 1D (fenêtre convolutive glissante)"
+    badge:
+      en: "Parallel local filter"
+      fr: "Filtre local parallèle"
+    description:
+      en: "Slide a kernel across neighbouring tokens to extract local features, in full parallel."
+      fr: "Faites glisser un filtre convolutif sur les jetons voisins pour extraire des motifs locaux, en parallèle."
+
+  - id: tokens
+    category: security
+    variant: app
+    paper: "Sennrich et al. (BPE) · Kudo (Unigram) · “Fishing for Magikarp” · TokenBreak (2025)"
+    title:
+      en: "Tokens & tokenization: the hidden attack surface"
+      fr: "Les tokens : la matière première invisible des LLM"
+    badge:
+      en: "Security deep dive"
+      fr: "Analyse sécurité approfondie"
+    description:
+      en: "A 24-screen interactive deck: BPE, WordPiece and Unigram tokenizers trained live in your browser, then five families of tokenizer-level attacks (glitch tokens, homoglyphs, TokenBreak, token smuggling, token bombs) and nine hardening measures."
+      fr: "Présentation interactive en 24 écrans : tokeniseurs BPE, WordPiece et Unigram entraînés en direct dans votre navigateur, puis cinq familles d'attaques au niveau du tokeniseur (glitch tokens, homoglyphes, TokenBreak, contrebande et bombes de tokens) et neuf mesures de durcissement."
+    hint:
+      en: "Use ← → or the dots to navigate · fullscreen available"
+      fr: "Naviguez avec ← → ou les points · plein écran disponible"
+
+  - id: hardening
+    category: hardening
+    variant: app
+    paper: "OWASP Agentic Security Initiative — ASI Top 10 (2026) · MAESTRO"
+    title:
+      en: "Agentic hardening lab: trifecta, ASI Top 10, checklist"
+      fr: "Labo de durcissement agentique : trifecta, ASI Top 10, checklist"
+    badge:
+      en: "Applied defence"
+      fr: "Défense appliquée"
+    description:
+      en: "Three working tools: tick the capabilities you actually grant an agent and watch the lethal trifecta close, explore the OWASP ASI Top 10 with its mapped countermeasures, and run the hardening checklist, with progress saved locally."
+      fr: "Trois outils : cochez les capacités réellement accordées à un agent et voyez la trifecta létale se refermer, explorez l'OWASP ASI Top 10 et ses contre-mesures, puis déroulez la checklist de durcissement, avec progression sauvegardée localement."
+    hint:
+      en: "Switch tools with the tabs · fullscreen available"
+      fr: "Changez d'outil avec les onglets · plein écran disponible"

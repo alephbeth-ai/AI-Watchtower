@@ -1,93 +1,84 @@
-# AI Watchtower
+# Aleph Beth — www.alephbeth.ai
 
-🌐 **Live site: https://alephbeth-ai.github.io/AI-Watchtower/**
+Site d'Aleph Beth : sécurité des agents IA (audit, red teaming, protection en production) et publications de recherche sur l'injection de prompts, la sécurité des serveurs MCP, les modèles de menace agentiques et le durcissement.
 
-AI Watchtower is a bilingual (English / French) AI security research blog. It covers the offensive and defensive sides of LLM-based systems: prompt injection, data poisoning, agentic attack surfaces (SOC/SIEM agents, tool-using agents), jailbreak countermeasures, and practical hardening playbooks.
+Site statique bilingue (EN à la racine, FR sous `/fr/`), construit avec [Hugo](https://gohugo.io/) et le thème [PaperMod](https://github.com/adityatelange/hugo-PaperMod), déployé sur GitHub Pages par GitHub Actions à chaque push sur `main`.
 
-Beyond the articles, the site ships **interactive teaching widgets** — step-by-step visualizations that walk a sentence through an LSTM, a CNN, and a Transformer — so readers can build an intuition for *how* models mix information before reasoning about how that mixing is exploited.
-
-## What the site offers
-
-- **Articles** — security research posts, filterable by category (Fundamentals, Explainer, Analysis, Hardening, Strategy) with full-text search across titles, summaries, and tags.
-- **Interactive** — a lab of standalone HTML widgets browsable from their own tab, in three sections: *Model Architectures* (step-by-step LSTM / CNN / Transformer walkthroughs), *Tokens & Security* (a 24-screen tokenization deep dive with tokenizers trained live in the browser and five families of tokenizer-level attacks), and *Practical Hardening & Agentic Security Research* (a lethal-trifecta blast-radius simulator, an OWASP ASI Top 10 explorer, and a scored hardening checklist). Every one of these tools is also surfaced on the homepage hero, one click away from the lab.
-- **Bilingual** — every article exists in an English and a French version, linked by a shared `translationKey`; the language switcher toggles the whole site and keeps the reader on the same article. In dev, a console warning flags any article that lost its counterpart.
-- **Dark / light mode** — follows the system preference by default, with a manual toggle.
-
-## Tech stack
-
-The site is a single-page application built with **React 18 + TypeScript + Vite + Tailwind CSS**. Articles are plain Markdown files with YAML frontmatter; at build time they are pulled in via Vite's `import.meta.glob`, parsed in [src/data/posts.ts](src/data/posts.ts), and rendered with [marked](https://github.com/markedjs/marked). Deployment to GitHub Pages is automated by GitHub Actions on every push to `main`.
-
-## Project structure
+## Structure
 
 ```
 .
-├── index.html                      # SPA entry point
-├── vite.config.ts                  # Vite config (publicDir: static, relative base)
-├── src/
-│   ├── App.tsx                     # Tabs (articles / interactive / contact), hero, search, filters
-│   ├── data/posts.ts               # Loads + parses all Markdown posts (frontmatter, reading time)
-│   ├── data/widgets.ts             # Interactive tool catalog shared by the hero and the lab
-│   ├── components/                 # Header, PostCard, PostView, WidgetEmbed, showcase, etc.
-│   └── types.ts
+├── hugo.toml                       # Configuration Hugo (langues, menus, sorties)
+├── data/
+│   ├── site.yml                    # Configuration centrale : launch_mode, contact, mentions, tarifs
+│   └── lab.yml                     # Catalogue du Lab interactif
+├── i18n/{en,fr}.toml               # Chaînes de l'interface
 ├── content/
-│   ├── en/posts/                   # English articles (Markdown + frontmatter)
-│   └── fr/posts/                   # French articles (Markdown + frontmatter)
+│   ├── en/                         # Site anglais : posts/, lab/, contact
+│   └── fr/                         # Site français : posts/, lab/, contact
+├── layouts/
+│   ├── index.html                  # Accueil
+│   ├── 404.html                    # Page d'erreur bilingue
+│   ├── lab/                        # Gabarits du Lab (liste, page outil)
+│   ├── _partials/                  # En-tête, pied de page, bandeau, e-mail, head
+│   ├── _shortcodes/                # checklist, details, stat, widget
+│   └── _markup/                    # Rendu des blocs Mermaid
+├── assets/
+│   ├── css/extended/               # Charte (alephbeth.css), composants, polices, interactif
+│   └── js/                         # site.js (comportements), interactive.js
 ├── static/
-│   ├── favicon.svg
-│   └── widgets/                    # Standalone HTML widgets (lstm/cnn/transformer/tokens/hardening, en+fr)
-└── .github/workflows/deploy.yml    # Build + deploy to GitHub Pages
+│   ├── fonts/                      # Polices auto-hébergées (Geist, Geist Mono, Instrument Serif)
+│   ├── widgets/                    # Widgets HTML autonomes (×2 langues)
+│   ├── favicon.svg · og-image.jpg
+├── themes/PaperMod/                # Thème (sous-module git)
+├── docs/                           # AUDIT.md, SECURITE.md
+└── .github/workflows/hugo.yml      # Construction et déploiement
 ```
 
-> Note: `hugo.toml`, `layouts/`, `archetypes/` and `assets/` are leftovers from the previous Hugo version of the site and are not used by the React build.
+## Configuration centrale
 
-## Local development
+`data/site.yml` pilote tout ce qui dépend de l'état de la société :
 
-Requires Node.js ≥ 20.
+- `launch_mode: "pre"` : société en cours de création. Aucun tarif, aucune mention d'entité, formulaire en liste d'attente, bandeau d'annonce.
+- `launch_mode: "open"` : mentions légales complètes, tarifs indicatifs, lien de prise de rendez-vous.
+
+Toute valeur vide n'affiche rien.
+
+## Ajouter un article bilingue
+
+Un fichier par langue, même date et même `translationKey` :
 
 ```bash
-npm install
-npm run dev
+hugo new content/fr/posts/AAAA-MM-JJ-mon-article.md
+hugo new content/en/posts/AAAA-MM-JJ-my-article.md
 ```
 
-Then open http://localhost:3000/.
+Conventions de l'en-tête :
 
-Other scripts:
+- `translationKey` : identique dans les deux fichiers (lie la paire de langues).
+- `theme` : `fundamentals`, `agents`, `poisoning` ou `hardening` (section de l'accueil, couleur).
+- `categories` : un seul libellé, miroir FR/EN : `Fondamentaux`/`Fundamentals`, `Vulgarisation`/`Explainer`, `Analyse`/`Analysis`, `Durcissement`/`Hardening`, `Stratégie`/`Strategy`.
+- `summary` : une à deux phrases, affichées sur les cartes.
+
+Les liens entre articles utilisent `{{< relref "fichier.md" >}}`.
+
+## Ajouter un outil au Lab
+
+1. Déposer `static/widgets/<id>-en.html` et `static/widgets/<id>-fr.html`.
+2. Décrire l'outil dans `data/lab.yml`.
+3. Créer `content/en/lab/<id>.md` et `content/fr/lab/<id>.md` avec `widget: <id>`.
+
+## Construction locale
+
+Le thème est un sous-module : sans lui, Hugo produit des pages vides sans erreur.
 
 ```bash
-npm run build     # production build into dist/
-npm run preview   # serve the production build locally
-npm run lint      # type-check (tsc --noEmit)
+git clone --recurse-submodules https://github.com/alephbeth-ai/AI-Watchtower.git
+hugo server
 ```
 
-## Add a new bilingual article
+Si le dépôt a été cloné sans sous-modules : `git submodule update --init --recursive`.
 
-Create one Markdown file per language, keeping the date and slug in sync:
+## Licence
 
-- `content/en/posts/YYYY-MM-DD-my-article.md`
-- `content/fr/posts/YYYY-MM-DD-mon-article.md`
-
-Frontmatter conventions the site relies on:
-
-- **`translationKey`** — the **same** value in both files; it links the language pair for the language switcher.
-- **`categories`** — a single type label, mirrored across languages: `Fundamentals`/`Fondamentaux`, `Explainer`/`Vulgarisation`, `Analysis`/`Analyse`, `Hardening`/`Durcissement`, `Strategy`/`Stratégie`. It drives the category filter on the homepage.
-- **`theme`** — one of `fundamentals`, `agents`, `poisoning`, `hardening` (used for brand coloring).
-- **`summary`** — a one-to-two sentence summary shown on the homepage cards.
-- **`tags`** — searchable keywords.
-- **`date`** / **`draft`** — posts with `draft: true` are excluded.
-
-Reading time is computed automatically (~200 words/minute).
-
-## Add a new interactive widget
-
-1. Drop the two standalone HTML files in `static/widgets/` — `my-widget-en.html` and `my-widget-fr.html`.
-2. Add one entry to the array in [src/data/widgets.ts](src/data/widgets.ts). That file is the single source of truth: the entry shows up both in the Interactive tab (grouped under its `category`) and in the homepage hero grid.
-
-Every user-facing string in the entry — `title`, `shortTitle`, `description`, `badge`, `hint` — has an English and a French form. Widgets whose layout is a fixed viewport (slide decks, dashboards) set `variant: 'app'` to get the framed window with fullscreen and open-in-new-tab controls.
-
-## Deployment
-
-Every push to `main` triggers [.github/workflows/deploy.yml](.github/workflows/deploy.yml), which installs dependencies, runs `npm run build`, and publishes `dist/` to GitHub Pages. In GitHub → Settings → Pages, the source must be set to **GitHub Actions**.
-
-## License
-
-Code: see [LICENSE](LICENSE). Article content: © AlephBeth-AI, all rights reserved unless otherwise noted in the article.
+Code : voir [LICENSE](LICENSE). Contenu des articles : © Aleph Beth, tous droits réservés sauf mention contraire dans l'article.

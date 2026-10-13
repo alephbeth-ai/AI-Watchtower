@@ -1,0 +1,31 @@
+{{- define "main" }}
+{{- $lang := .Lang }}
+{{- $lab := hugo.Data.lab }}
+{{- $pages := .Pages }}
+<header class="page-header ab-lab-header">
+    <h1>{{ .Title | default (i18n "lab_title") }}</h1>
+    <p class="ab-lab-intro">{{ .Description | default (i18n "lab_intro") }}</p>
+</header>
+
+{{- range $cat := $lab.categories }}
+{{- $items := where $lab.widgets "category" $cat.key }}
+{{- with $items }}
+<section class="ab-lab-section">
+    <h2 class="ab-lab-cat">{{ index $cat $lang }}</h2>
+    <div class="ab-lab-grid">
+        {{- range $w := . }}
+        {{- $page := index (where $pages "Params.widget" $w.id) 0 }}
+        {{- with $page }}
+        <a class="ab-lab-card" href="{{ .RelPermalink }}">
+            <span class="ab-lab-badge">{{ index $w.badge $lang }}</span>
+            <span class="ab-lab-title">{{ index $w.title $lang }}</span>
+            <span class="ab-lab-desc">{{ index $w.description $lang }}</span>
+            <span class="ab-lab-open">{{ i18n "lab_open" }} →</span>
+        </a>
+        {{- end }}
+        {{- end }}
+    </div>
+</section>
+{{- end }}
+{{- end }}
+{{- end }}

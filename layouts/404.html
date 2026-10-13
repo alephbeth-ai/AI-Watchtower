@@ -1,0 +1,22 @@
+{{- define "main" }}
+{{- /* Page d'erreur unique, bilingue : GitHub Pages sert /404.html pour toute
+       adresse inconnue, quelle que soit la langue demandée. */ -}}
+<section class="ab-404">
+    <p class="ab-404-code" aria-hidden="true">404</p>
+    <h1>Page introuvable <span class="ab-404-sep">·</span> Page not found</h1>
+    <p lang="fr">L'adresse demandée n'existe pas ou a été déplacée. Les articles ont conservé leurs adresses ; si vous arrivez d'un lien externe, il est peut-être erroné.</p>
+    <p lang="en">The address you asked for does not exist or has moved. Articles have kept their addresses; if you came from an external link, it may be wrong.</p>
+    <ul class="ab-404-links">
+        {{- range hugo.Sites }}
+        {{- $fr := eq .Language.Lang "fr" }}
+        <li lang="{{ .Language.Lang }}">
+            <strong>{{ .Language.Label }}</strong> :
+            <a href="{{ .Home.Permalink }}">{{ cond $fr "Accueil" "Home" }}</a>
+            {{- with .GetPage "/posts" }} · <a href="{{ .Permalink }}">{{ cond $fr "Recherche" "Research" }}</a>{{ end }}
+            {{- with .GetPage "/lab" }} · <a href="{{ .Permalink }}">Lab</a>{{ end }}
+            {{- with .GetPage "/contact" }} · <a href="{{ .Permalink }}">Contact</a>{{ end }}
+        </li>
+        {{- end }}
+    </ul>
+</section>
+{{- end }}

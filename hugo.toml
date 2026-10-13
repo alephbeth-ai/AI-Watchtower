@@ -1,5 +1,5 @@
-baseURL = "https://aleph-beth.github.io/AI-Watchtower/"
-title = "AI Watchtower"
+baseURL = "https://www.alephbeth.ai/"
+title = "Aleph Beth"
 theme = "PaperMod"
 
 defaultContentLanguage = "en"
@@ -17,17 +17,22 @@ buildExpired = false
 [outputs]
   home = ["HTML", "RSS", "JSON"]
 
+# Keep the feed addresses of the previous site: /rss.xml and /fr/rss.xml
+[outputFormats.RSS]
+  baseName = "rss"
+
 [params]
   env = "production"
-  description = "AI security research — prompt injection, MCP vulnerabilities, agent threat models, hardening playbooks."
-  author = "aleph-beth"
+  author = "Aleph Beth"
+  description = "AI-agent security: audit, red teaming and production hardening. Research on prompt injection, MCP, agent threat models."
+  images = ["og-image.jpg"]
   defaultTheme = "auto"
   ShowReadingTime = true
   ShowShareButtons = false
   ShowPostNavLinks = true
   ShowBreadCrumbs = true
   ShowCodeCopyButtons = true
-  ShowWordCount = true
+  ShowWordCount = false
   ShowToc = true
   TocOpen = false
   comments = false
@@ -37,7 +42,7 @@ buildExpired = false
   hideSummary = false
 
   [params.label]
-    text = "AlephBeth"
+    text = "Aleph Beth"
 
   [params.assets]
     disableHLJS = true
@@ -49,10 +54,6 @@ buildExpired = false
     safari_pinned_tab = "favicon.svg"
     theme_color = "#15264d"
     msapplication_TileColor = "#15264d"
-
-  [[params.socialIcons]]
-    name = "github"
-    url = "https://github.com/aleph-beth/AI-Watchtower"
 
 [markup]
   [markup.highlight]
@@ -70,82 +71,55 @@ buildExpired = false
     startLevel = 2
 
 # ─── Multilingual ────────────────────────────────────────────────────────────
+# English at the root (/), French under /fr/ — unchanged from the previous site
+# so that every existing address keeps working (decision of 2026-10-13).
 
 [languages]
 
-  [languages.fr]
-    languageName = "Français"
-    languageCode = "fr-FR"
-    contentDir = "content/fr"
-    weight = 2
-    title = "AI Watchtower"
-    [languages.fr.params]
-      description = "Veille critique sur la sécurité des systèmes d'IA — injection de prompts, failles MCP, modèles de menace agentiques, playbooks de durcissement."
-      [languages.fr.params.homeInfoParams]
-        Title = "AI Watchtower"
-        Content = """
-**AI Watchtower** est une veille critique sur la sécurité des systèmes d'IA. Chaque entrée part d'un morceau de recherche en cours — injection de prompts directe et indirecte, failles dans les serveurs MCP, modèles de menace pour les agents, arbitrages concrets de durcissement — et le traduit en consignes actionnables pour les concepteurs et opérateurs d'assistants LLM.
-
-Le format est court, structuré, opérationnel : une analyse, une grille de risque, une checklist applicable le jour même.
-
-Articles ci-dessous.
-"""
-    [[languages.fr.menu.main]]
-      identifier = "posts"
-      name = "Articles"
-      url = "posts/"
-      weight = 10
-    [[languages.fr.menu.main]]
-      identifier = "tags"
-      name = "Tags"
-      url = "tags/"
-      weight = 20
-    [[languages.fr.menu.main]]
-      identifier = "search"
-      name = "Recherche"
-      url = "search/"
-      weight = 30
-    [[languages.fr.menu.main]]
-      identifier = "contact"
-      name = "Contact"
-      url = "contact/"
-      weight = 40
-
   [languages.en]
-    languageName = "English"
-    languageCode = "en-US"
+    label = "English"
+    locale = "en-US"
     contentDir = "content/en"
     weight = 1
-    title = "AI Watchtower"
+    title = "Aleph Beth"
     [languages.en.params]
-      description = "Critical watch on AI security — prompt injection, MCP vulnerabilities, agent threat models, hardening playbooks."
-      [languages.en.params.homeInfoParams]
-        Title = "AI Watchtower"
-        Content = """
-**AI Watchtower** is a critical-watch project on the security of AI systems. Each entry takes a piece of ongoing research — direct and indirect prompt injection, MCP server vulnerabilities, agent threat models, concrete hardening tradeoffs — and turns it into actionable guidance for builders and operators of LLM-based assistants.
-
-The format is short, structured, operational: one analysis, one risk grid, one checklist you can apply the same day.
-
-Articles below.
-"""
-    [[languages.en.menu.main]]
-      identifier = "posts"
-      name = "Posts"
-      url = "posts/"
-      weight = 10
-    [[languages.en.menu.main]]
-      identifier = "tags"
-      name = "Tags"
-      url = "tags/"
-      weight = 20
-    [[languages.en.menu.main]]
-      identifier = "search"
-      name = "Search"
-      url = "search/"
+      description = "AI-agent security: audit, red teaming and production hardening. Research on prompt injection, MCP server security, agent threat models and hardening playbooks."
+    [[languages.en.menus.main]]
+      identifier = "research"
+      name = "Research"
+      pageRef = "/posts"
       weight = 30
-    [[languages.en.menu.main]]
+    [[languages.en.menus.main]]
+      identifier = "lab"
+      name = "Lab"
+      pageRef = "/lab"
+      weight = 35
+    [[languages.en.menus.main]]
       identifier = "contact"
       name = "Contact"
-      url = "contact/"
-      weight = 40
+      pageRef = "/contact"
+      weight = 50
 
+  [languages.fr]
+    label = "Français"
+    locale = "fr-FR"
+    contentDir = "content/fr"
+    weight = 2
+    title = "Aleph Beth"
+    [languages.fr.params]
+      description = "Sécurité des agents IA : audit, red teaming et protection en production. Recherche sur l'injection de prompts, la sécurité des serveurs MCP, les modèles de menace agentiques et le durcissement."
+    [[languages.fr.menus.main]]
+      identifier = "research"
+      name = "Recherche"
+      pageRef = "/posts"
+      weight = 30
+    [[languages.fr.menus.main]]
+      identifier = "lab"
+      name = "Lab"
+      pageRef = "/lab"
+      weight = 35
+    [[languages.fr.menus.main]]
+      identifier = "contact"
+      name = "Contact"
+      pageRef = "/contact"
+      weight = 50
