@@ -80,15 +80,12 @@ code, pre, kbd, samp,
 }
 
 .ab-emblem {
-    display: inline-flex;
-    color: var(--primary); /* drives the currentColor branches/roots */
-    flex: 0 0 auto;
-}
-
-.ab-emblem svg {
-    height: 34px;
-    width: auto;
+    height: 40px;
+    width: 40px;
     display: block;
+    flex: 0 0 auto;
+    border-radius: 8px;
+    object-fit: cover;
 }
 
 .ab-wordmark {
