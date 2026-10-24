@@ -1,5 +1,5 @@
 [cta_write]
-other = "Write to us"
+other = "Request a review"
 
 [status_pre]
 other = "Company in formation — engagements open in {{ .date }}."
@@ -20,7 +20,7 @@ other = "RSS feed"
 other = "Switch language"
 
 [email_label]
-other = "Write to us by e-mail"
+other = "Request a review by e-mail"
 
 [lab_title]
 other = "Interactive Lab"

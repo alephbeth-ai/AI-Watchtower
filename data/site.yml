@@ -14,8 +14,8 @@ brand: "Aleph Beth"
 # Graphies de la marque dans les écritures sémitiques (hébreu, arabe),
 # affichées à côté du nom.
 brand_scripts: "אב · أب"
-tagline_fr: "Nous sécurisons les agents IA de votre entreprise."
-tagline_en: "We secure your company's AI agents."
+tagline_fr: "Nous encadrons les agents IA qui lisent, mémorisent et agissent sur vos outils métier."
+tagline_en: "We govern AI agents that read, remember and act across your business tools."
 
 contact:
   email: "contact@alephbeth.ai"   # déjà publique sur le site précédent

@@ -63,14 +63,9 @@ code, pre, kbd, samp,
     font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-/* ----- En-tête : logo + wordmark ----------------------------------------- */
+/* ----- En-tête : signature typographique ---------------------------------- */
 
 .ab-logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
-.ab-emblem {
-    height: 40px; width: 40px; display: block; flex: 0 0 auto;
-    border-radius: 9px; object-fit: cover;
-    box-shadow: 0 0 0 1px rgba(34, 211, 238, .35), 0 0 14px var(--ab-glow);
-}
 .ab-wordmark { font-weight: 700; font-size: 1.35rem; line-height: 1; letter-spacing: -0.01em; white-space: nowrap; }
 .ab-wordmark .ab-a { color: var(--primary); }
 .ab-wordmark .ab-b { color: var(--ab-accent); }

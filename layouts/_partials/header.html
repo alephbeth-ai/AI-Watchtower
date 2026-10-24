@@ -5,10 +5,6 @@
         <div class="logo">
             {{- $label_text := (site.Params.label.text | default site.Title) }}
             <a href="{{ "" | absLangURL }}" accesskey="h" title="{{ $label_text }} (Alt + H)" class="ab-logo">
-                {{- with resources.Get "images/logo-owl.jpg" }}
-                {{- $owl := (.Crop "860x860 Center").Resize "80x80 webp q85" }}
-                <img class="ab-emblem" src="{{ $owl.RelPermalink }}" width="40" height="40" alt="" decoding="async">
-                {{- end }}
                 <span class="ab-wordmark"><span class="ab-a">Aleph</span><span class="ab-b">Beth</span></span>
                 {{- with $cfg.brand_scripts }}<span class="ab-scripts" aria-hidden="true">{{ . }}</span>{{ end }}
             </a>

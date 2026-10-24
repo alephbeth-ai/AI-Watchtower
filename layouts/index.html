@@ -16,10 +16,6 @@
             <a class="ab-cta ab-cta-lg ab-cta-secondary" href="{{ $services }}">{{ $o.home.see_services }}</a>
         </div>
     </div>
-    {{- with resources.Get "images/logo-owl.jpg" }}
-    {{- $art := (.Crop "860x860 Center").Resize "480x480 webp q85" }}
-    <div class="ab-hero-art"><img src="{{ $art.RelPermalink }}" width="240" height="240" alt="" decoding="async" fetchpriority="high"></div>
-    {{- end }}
 </section>
 
 <section class="ab-section">

@@ -1,6 +1,6 @@
 ---
-title: "Contact"
-summary: "Entrez en contact avec l'équipe AlephBeth — recherche en sécurité de l'IA, collaborations et revues de durcissement."
+title: "Demander une revue de sécurité"
+summary: "Demandez une revue de sécurité pour vos agents IA, leurs accès, leur mémoire, leurs skills et leurs actions métier."
 hidemeta: true
 disableShare: true
 ShowReadingTime: false
@@ -25,21 +25,21 @@ ShowBreadCrumbs: false
 
 <div class="ab-contact">
 
-Nous transformons la recherche en cours sur la sécurité de l'IA — **injection de prompts directe et indirecte, failles des serveurs MCP, modèles de menace agentiques, empoisonnement de données et risques sur la chaîne d'approvisionnement** — en consignes que les concepteurs et opérateurs de systèmes LLM peuvent appliquer le jour même. Si vous déployez des agents, exploitez un assistant en production, ou souhaitez simplement un regard neuf sur votre modèle de menace, écrivez-nous.
+Vous déployez un agent IA qui lit des contenus, utilise des données ou agit dans vos outils métier ? Nous vous aidons à identifier les décisions qu'il peut prendre, les droits dont il dispose et les scénarios qui peuvent dévier de vos règles. Nous intervenons sur un périmètre autorisé, avec des constats et recommandations exploitables — sans revendiquer de certification ni de conformité.
 {.ab-pitch}
 
 <div class="ab-contact-card">
-<span class="ab-eyebrow">Écrivez-nous</span>
+<span class="ab-eyebrow">Demander une revue</span>
 <a class="ab-mail" href="mailto:contact@alephbeth.ai">contact@alephbeth.ai</a>
 </div>
 
-Contactez-nous pour :
+Décrivez-nous notamment :
 
 <ul class="ab-topics">
-<li>Des revues de durcissement de pipelines agentiques, d'intégrations MCP et d'assistants LLM</li>
-<li>Une collaboration sur la recherche en sécurité de l'IA ou une divulgation responsable</li>
-<li>Des conférences, ateliers et sessions de modélisation des menaces</li>
-<li>Vos retours, corrections ou sujets que vous aimeriez voir traités par la Watchtower</li>
+<li>L'agent ou l'automatisation à examiner, et les outils ou données auxquels il accède</li>
+<li>Les décisions ou actions métier qu'il peut influencer : envoyer, modifier, payer, supprimer ou déléguer</li>
+<li>Le type de revue attendu : diagnostic, red team contrôlé, ou durcissement avec harness sur mesure</li>
+<li>Les contraintes utiles : environnement, calendrier, confidentialité et périmètre d'autorisation</li>
 </ul>
 
 </div>

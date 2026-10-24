@@ -1,6 +1,6 @@
 ---
-title: "Contact"
-summary: "Get in touch with the AlephBeth team — AI security research, collaborations, and hardening reviews."
+title: "Request a security review"
+summary: "Request a security review for your AI agents, their access, memory, skills and business actions."
 hidemeta: true
 disableShare: true
 ShowReadingTime: false
@@ -25,21 +25,21 @@ ShowBreadCrumbs: false
 
 <div class="ab-contact">
 
-We turn ongoing AI-security research — **direct and indirect prompt injection, MCP server vulnerabilities, agent threat models, data-poisoning and supply-chain risks** — into guidance that builders and operators of LLM-based systems can apply the same day. If you ship agents, run an assistant in production, or just want a second set of eyes on your threat model, we'd like to hear from you.
+Do you deploy an AI agent that reads content, uses data or acts inside business tools? We help you identify the decisions it can make, the rights it holds and the scenarios that can depart from your rules. We work within an authorised scope and deliver usable findings and recommendations — without claiming certification or compliance.
 {.ab-pitch}
 
 <div class="ab-contact-card">
-<span class="ab-eyebrow">Write to us</span>
+<span class="ab-eyebrow">Request a review</span>
 <a class="ab-mail" href="mailto:contact@alephbeth.ai">contact@alephbeth.ai</a>
 </div>
 
-Reach out about:
+Please include:
 
 <ul class="ab-topics">
-<li>Hardening reviews of agentic pipelines, MCP integrations, and LLM assistants</li>
-<li>Collaboration on AI-security research or responsible disclosure</li>
-<li>Talks, workshops, and threat-modeling sessions</li>
-<li>Feedback, corrections, or topics you'd like the Watchtower to cover</li>
+<li>The agent or automation to review, and the tools or data it can access</li>
+<li>The business decisions or actions it can influence: send, modify, pay, delete or delegate</li>
+<li>The review you need: diagnostic, controlled red team, or hardening with a custom harness</li>
+<li>Useful constraints: environment, timeline, confidentiality and authorised scope</li>
 </ul>
 
 </div>

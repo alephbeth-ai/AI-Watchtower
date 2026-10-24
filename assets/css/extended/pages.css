@@ -14,18 +14,12 @@
 
 /* Hero */
 .ab-hero {
-    display: grid; grid-template-columns: 1fr; gap: 1.6rem; align-items: center;
+    display: block;
     padding: 1.2rem 0 1.6rem;
 }
 .ab-hero h1 { font-size: clamp(1.9rem, 4.5vw, 2.9rem); line-height: 1.12; margin: 0 0 .9rem; letter-spacing: -0.02em; }
-.ab-hero-art { display: none; }
 @media (min-width: 820px) {
-    .ab-hero { grid-template-columns: 1.6fr 1fr; padding: 2.2rem 0 2.4rem; }
-    .ab-hero-art { display: flex; justify-content: center; }
-    .ab-hero-art img {
-        width: 240px; height: 240px; border-radius: 28px;
-        box-shadow: 0 0 0 1px rgba(34, 211, 238, .35), 0 0 48px var(--ab-glow);
-    }
+    .ab-hero { padding: 2.2rem 0 2.4rem; }
 }
 
 /* Sections */

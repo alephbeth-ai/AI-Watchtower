@@ -1,5 +1,5 @@
 [cta_write]
-other = "Nous écrire"
+other = "Demander une revue"
 
 [status_pre]
 other = "Société en cours de création — ouverture des missions en {{ .date }}."
@@ -20,7 +20,7 @@ other = "Flux RSS"
 other = "Changer de langue"
 
 [email_label]
-other = "Nous écrire par e-mail"
+other = "Demander une revue par e-mail"
 
 [lab_title]
 other = "Lab interactif"
